@@ -118,7 +118,11 @@ public class Model extends Observable {
         }
         // Iterate over columns and call processColumn() to move.
         for (int c = 0; c < board.size(); c++) {
-
+            boolean tmp_change;
+            tmp_change = processColumn(c);
+            if (tmp_change) {
+                changed = true;
+            }
         }
 
         checkGameOver();
@@ -135,59 +139,74 @@ public class Model extends Observable {
      * It uses an array to track whether a merge has been made.
      */
     private boolean processColumn(int col) {
-        boolean changed;
-        changed = false;
-        boolean update_score;
+        boolean col_changed;
+        col_changed = false;
         // Array of booleans corresponding to rows 0, 1, and 2. These indicate whether
         // a merge has been made already.
-        boolean[] merge_status = new boolean[] {false, false, false};
+        boolean[] merge_status = new boolean[] {false, false, false, false};
 
-        // Iterate through the rows from second to the top down to 0.
-        for (int row = board.size() - 2; row >= 0; row--) {
+        int end = board.size() - 1;
+        /* Iterate through the rows from second-to-the-top down to 0. */
+        for (int row = end - 1; row >= 0; row--) {
             Tile t = board.tile(col, row);
+            if (t == null) {
+                // no need to move a null tile
+                continue;
+            }
             // Check status of tiles above Tile t.
-            for (int row_above = row + 1; row < board.size() - 1; row_above++) {
+            for (int row_above = row + 1; row_above <= end; row_above++) {
                 Tile t_above = board.tile(col, row_above);
-                if (is_available(t.value(), t_above, merge_status[row_above])) {
-                    // check for rows further above before committing to a move
-                    if (!keep_checking(col, row_above, t.value(), merge_status)) {
-                        // no other options, so move:
-                        update_score = board.move(col, row_above, t);
-                        if (update_score) {
-                            // Move resulted in merge, so increment score by
-                            // the value of tile at new location.
-                            this.score += board.tile(col, row_above).value();
-                            // reset update_score
-                            update_score = false;
-                        }
-                        return true;
+                boolean merge_check;
+                if (isAvailable(t.value(), t_above, merge_status[row_above])) {
+                    // Move is possible, now check for rows further above before committing to a move.
+                    if (keepChecking(col, row_above, t.value(), merge_status)) {
+                        // A tile further up toward "North" can be moved into.
+                        continue;
+                    } else {
+                        /* No other options, so perform move. Returns boolean whether merge occurred. */
+                        merge_status[row_above] = makeMove(col, row_above, t);
+                        col_changed = true;
                     }
+                    break;
                 }
             }
+        }
+        return col_changed;
+    }
+
+    /** Helper method to perform move.
+     * Returns boolean to indicate whether merge occurred. */
+    private boolean makeMove(int col, int row, Tile t) {
+        boolean update_score = board.move(col, row, t);
+        if (update_score) {
+            // Move resulted in merge, so increment score by
+            // the value of tile at new location.
+            this.score += board.tile(col, row).value();
+            return true;
         }
         return false;
     }
 
-   /** Checks whether tile is available for a move. */
-    private boolean is_available(int current_t_val, Tile possible_t, boolean merge_status) {
-        return possible_t == null || possible_t.value() == current_t_val && merge_status;
+   /** Checks whether tile is available for a move:
+    * 1. If it is null, or
+    * 2. If the current tile's value equals that of the tile above it
+    * and that tile has not been merged during this tilt procedure.*/
+    private boolean isAvailable(int current_t_val, Tile possible_t, boolean merge_status) {
+        if (possible_t == null) {
+            return true;
+        } else return possible_t.value() == current_t_val && !merge_status;
     }
 
-    /** Checks whether there are more rows available for a move. */
-    private boolean keep_checking(int col, int row_above, int t_val, boolean[] merge_status) {
+    /** Checks whether there are more rows available for a move.
+     * This method takes the current row being considered for moving into,
+     * and checks any rows above that one. Hence: int r = row_above + 1;
+     * Currently, it is returning false when it ought to return true.*/
+    private boolean keepChecking(int col, int row_above, int t_val, boolean[] merge_status) {
         int r = row_above + 1;
-        while (r < board.size() - 1) {
-            if (is_available(t_val, board.tile(col, row_above), merge_status[row_above])) {
+        while (r < board.size()) {
+            if (isAvailable(t_val, board.tile(col, r), merge_status[r])) {
                 return true;
             }
-//            if (board.tile(col, r) == null) {
-//                return true;
-//            } else if (board.tile(col, r).value() == t_val) {
-//                // Possible merge, so check whether merge has already occurred.
-//               if (!merge_status[r]) {
-//                   return true;
-//               }
-//            }
             r += 1;
         }
         return false;
@@ -236,7 +255,7 @@ public class Model extends Observable {
             for (int c = 0; c < end; c++) {
                 // Since each tile can be null, we need to catch that exception.
                 try {
-                    int val = b.tile(r, c).value();
+                    int val = b.tile(c, r).value();
                     if (val == MAX_PIECE) {
                         return true;
                     }
@@ -264,21 +283,23 @@ public class Model extends Observable {
 
         /* If there are two adjacent tiles with the same value, then true.
         * We can assume every value is an int because none are empty at this point.
-        * To avoid repeats, we check (r, c) against (r+1, c) and (r, c+1).
-        * We also need to avoid cases where r+1 or c+1 are >= b.size().*/
-        int end = b.size();
+        * To avoid repeats, we check (c, r) against (c+1, r) and (c, r+1).
+        * We also need to avoid cases where c+1 or r+1 are >= b.size().*/
+        int end = b.size() - 1;  // end = 3 for a 4x4 board
 
-        for (int r = 0; r < end; r++) {
-            for (int c = 0; c < end; c++) {
-               int above = c + 1;
-               if (above < end) {
-                   if (b.tile(r, c).value() == b.tile(r, above).value()) {
+        // Iterate over each row
+        for (int r = 0; r <= end; r++) {
+            // For each row, iterate over each column
+            for (int c = 0; c <= end; c++) {
+               int above = r + 1;
+               if (above <= end) {
+                   if (b.tile(c, r).value() == b.tile(c, above).value()) {
                        return true;
                    }
                }
-               int over = r + 1;
-               if (over < end) {
-                   if (b.tile(over, c).value() == b.tile(over, c).value()) {
+               int over = c + 1;
+               if (over <= end) {
+                   if (b.tile(c, r).value() == b.tile(over, r).value()) {
                        return true;
                    }
                }
