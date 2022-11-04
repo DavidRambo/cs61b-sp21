@@ -5,7 +5,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author David Rambo
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -113,12 +113,84 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        if (side != Side.NORTH) {
+            board.setViewingPerspective(side);
+        }
+        // Iterate over columns and call processColumn() to move.
+        for (int c = 0; c < board.size(); c++) {
+
+        }
 
         checkGameOver();
         if (changed) {
             setChanged();
         }
+
+        board.setViewingPerspective(Side.NORTH);
         return changed;
+    }
+
+    /** Iterate over a column's rows and make necessary moves.
+     * It begins at row = 2 because "Northern"-row tiles cannot move.
+     * It uses an array to track whether a merge has been made.
+     */
+    private boolean processColumn(int col) {
+        boolean changed;
+        changed = false;
+        boolean update_score;
+        // Array of booleans corresponding to rows 0, 1, and 2. These indicate whether
+        // a merge has been made already.
+        boolean[] merge_status = new boolean[] {false, false, false};
+
+        // Iterate through the rows from second to the top down to 0.
+        for (int row = board.size() - 2; row >= 0; row--) {
+            Tile t = board.tile(col, row);
+            // Check status of tiles above Tile t.
+            for (int row_above = row + 1; row < board.size() - 1; row_above++) {
+                Tile t_above = board.tile(col, row_above);
+                if (is_available(t.value(), t_above, merge_status[row_above])) {
+                    // check for rows further above before committing to a move
+                    if (!keep_checking(col, row_above, t.value(), merge_status)) {
+                        // no other options, so move:
+                        update_score = board.move(col, row_above, t);
+                        if (update_score) {
+                            // Move resulted in merge, so increment score by
+                            // the value of tile at new location.
+                            this.score += board.tile(col, row_above).value();
+                            // reset update_score
+                            update_score = false;
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+   /** Checks whether tile is available for a move. */
+    private boolean is_available(int current_t_val, Tile possible_t, boolean merge_status) {
+        return possible_t == null || possible_t.value() == current_t_val && merge_status;
+    }
+
+    /** Checks whether there are more rows available for a move. */
+    private boolean keep_checking(int col, int row_above, int t_val, boolean[] merge_status) {
+        int r = row_above + 1;
+        while (r < board.size() - 1) {
+            if (is_available(t_val, board.tile(col, row_above), merge_status[row_above])) {
+                return true;
+            }
+//            if (board.tile(col, r) == null) {
+//                return true;
+//            } else if (board.tile(col, r).value() == t_val) {
+//                // Possible merge, so check whether merge has already occurred.
+//               if (!merge_status[r]) {
+//                   return true;
+//               }
+//            }
+            r += 1;
+        }
+        return false;
     }
 
     /** Checks if the game is over and sets the gameOver variable
@@ -137,7 +209,17 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
-        // TODO: Fill in this function.
+        // iterate through the values at each row/col position and return true if any is 0
+        int end = b.size();  // get size of board
+        /* Iterate over each row. */
+        for (int r = 0; r < end; r++) {
+            /* Iterate over each column per row. */
+            for (int c = 0; c < end; c++) {
+                if (b.tile(r, c) == null) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -147,7 +229,24 @@ public class Model extends Observable {
      * given a Tile object t, we get its value with t.value().
      */
     public static boolean maxTileExists(Board b) {
-        // TODO: Fill in this function.
+        int end = b.size();  // get size of board
+        /* Iterate over each row. */
+        for (int r = 0; r < end; r++) {
+            /* Iterate over each column per row. */
+            for (int c = 0; c < end; c++) {
+                // Since each tile can be null, we need to catch that exception.
+                try {
+                    int val = b.tile(r, c).value();
+                    if (val == MAX_PIECE) {
+                        return true;
+                    }
+                }
+                catch (Exception e) {
+                    continue;
+                }
+            }
+        }
+
         return false;
     }
 
@@ -158,7 +257,33 @@ public class Model extends Observable {
      * 2. There are two adjacent tiles with the same value.
      */
     public static boolean atLeastOneMoveExists(Board b) {
-        // TODO: Fill in this function.
+        /* If there is an empty space, then true. */
+        if (emptySpaceExists(b)) {
+            return true;
+        }
+
+        /* If there are two adjacent tiles with the same value, then true.
+        * We can assume every value is an int because none are empty at this point.
+        * To avoid repeats, we check (r, c) against (r+1, c) and (r, c+1).
+        * We also need to avoid cases where r+1 or c+1 are >= b.size().*/
+        int end = b.size();
+
+        for (int r = 0; r < end; r++) {
+            for (int c = 0; c < end; c++) {
+               int above = c + 1;
+               if (above < end) {
+                   if (b.tile(r, c).value() == b.tile(r, above).value()) {
+                       return true;
+                   }
+               }
+               int over = r + 1;
+               if (over < end) {
+                   if (b.tile(over, c).value() == b.tile(over, c).value()) {
+                       return true;
+                   }
+               }
+            }
+        }
         return false;
     }
 
