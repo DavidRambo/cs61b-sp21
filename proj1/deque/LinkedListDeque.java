@@ -6,13 +6,13 @@ package deque;
  * author: David Rambo
  * */
 
-public class LinkedListDeque<Type> {
+public class LinkedListDeque<T> {
     private class Node {
         public Node prev;
-        public Type item;
+        public T item;
         public Node next;
 
-        public Node(Node p, Type i, Node n) {
+        public Node(Node p, T i, Node n) {
             prev = p;
             item = i;
             next = n;
@@ -30,7 +30,7 @@ public class LinkedListDeque<Type> {
     }
 
     /** Constructor method for a LLD with a circular sentinel node. */
-    public LinkedListDeque(Type i) {
+    public LinkedListDeque(T i) {
         Node first;
         first = new Node(sentinel, i, sentinel);
         sentinel.next = first;
@@ -50,14 +50,14 @@ public class LinkedListDeque<Type> {
     }
 
     /** Add new Node to the front of the deque. */
-    public void addFirst(Type item) {
+    public void addFirst(T item) {
         sentinel.next = new Node(sentinel, item, sentinel.next);
         size += 1;
     }
 
     /** Add new Node to the end of the deque.
      * */
-    public void addLast(Type item) {
+    public void addLast(T item) {
         // Reach the end using sentinel.prev. Set new last item to have
         // a next = sentinel and a prev = the old last.
         Node oldLast = sentinel.prev;
@@ -82,9 +82,10 @@ public class LinkedListDeque<Type> {
      * If no such item exists, then it return s.null
      * @return Type
      */
-    public Type removeFirst() {
-        if (sentinel.next != sentinel) {
-            Type firstItem = sentinel.next.item;
+    public T removeFirst() {
+//        if (sentinel.next != sentinel) {
+        if (!isEmpty()) {
+            T firstItem = sentinel.next.item;
             sentinel.next = sentinel.next.next;
             size -= 1;
             return firstItem;
@@ -96,9 +97,9 @@ public class LinkedListDeque<Type> {
      * If no such item exists, then it return s.null
      * @return Type
      */
-    public Type removeLast() {
-        if (sentinel.prev != sentinel) {
-            Type lastItem = sentinel.prev.item;
+    public T removeLast() {
+        if (!isEmpty()) {
+            T lastItem = sentinel.prev.item;
             Node newLast = sentinel.prev.prev;
             sentinel.prev = newLast;
             newLast.next = sentinel;
@@ -110,7 +111,7 @@ public class LinkedListDeque<Type> {
 
     /** Returns the item at the given index, where 0 is the front.
      * If no such item exists, then return null. Does not alter the deque. */
-    public Type get(int index) {
+    public T get(int index) {
         Node p = sentinel.next;
         while (index > 0) {
             if (p == sentinel) {
@@ -123,14 +124,14 @@ public class LinkedListDeque<Type> {
     }
 
     /** Recursive implementation of get method. */
-    public Type getRecursive(int index) {
+    public T getRecursive(int index) {
         Node temp = sentinel.next;
         // Pass first node to the helper method.
         return getHelper(index, temp);
     }
 
     /** Helper method for getRecursive(). */
-    private Type getHelper(int index, Node p) {
+    private T getHelper(int index, Node p) {
         if (p.item == null) {
             return null;
         } else if (index == 0) {
