@@ -164,13 +164,13 @@ public class ArrayDequeTest {
                 L.addFirst(randVal);
                 A.addFirst(randVal);
                 size += 1;
-                assertEquals(size, L.size());
-                int sizeL = L.size();
-                int sizeA = A.size();
-                assertEquals(sizeL, sizeA);
+                assertEquals(size, A.size());
+//                assertEquals(size, L.size());
+//                int sizeA = A.size();
+//                assertEquals(size, A.size());
             } else if (operationNumber == 2) {
                 // get if size is non-zero
-                if (L.size() > 1) {
+                if (size > 1) {
                     int randIndex = StdRandom.uniform(0, L.size() - 1);
                     int getL = L.get(randIndex);
                     int getA = A.get(randIndex);

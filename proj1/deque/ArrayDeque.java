@@ -79,11 +79,14 @@ public class ArrayDeque<T> {
 
         if (removed == null) {
             return null;
-        } else if (front == items.length - 1 && front != back) {
+        } else if (front == back) {
+            // One-item array, so front and back remain the same.
+            items[front] = null;
+        } else if (front == items.length - 1) {
             // Circular condition and not a one-item array.
             items[front] = null;
             front = 0;
-        } else if (front != back) {
+        } else {
             items[front] = null;
             front += 1;
         }
@@ -104,12 +107,14 @@ public class ArrayDeque<T> {
 
         if (removed == null) {
             return null;
-        } else if (back == 0 && front != back) {
+        } else if (front == back) {
+            // One-item array, so front and back remain the same.
+            items[back] = null;
+        } else if (back == 0) {
             // Circular condition and more than one item in array.
             items[back] = null;
             back = items.length - 1;
-        } else if (front != back) {
-            // Check for 1-item array; i.e. front == back
+        } else {
             items[back] = null;
             back -= 1;
         }
@@ -137,7 +142,7 @@ public class ArrayDeque<T> {
     public T get(int index) {
         int location = front + index;
         // Check for circularity
-        if (location > items.length) {
+        if (location >= items.length) {
             location = location - items.length;
         }
         return items[location];

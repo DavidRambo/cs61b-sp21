@@ -64,7 +64,8 @@ public class LinkedListDeque<T> {
             addNew(item);
         } else {
             Node oldFirst = sentinel.next;
-            sentinel.next = new Node(oldFirst, item, sentinel);
+            sentinel.next = new Node(sentinel, item, oldFirst);
+            oldFirst.prev = sentinel.next;
             size += 1;
         }
     }
@@ -79,7 +80,7 @@ public class LinkedListDeque<T> {
             // Access the end using sentinel.prev. Set new last item to have
             // its next = sentinel and its prev = the old last.
             Node oldLast = sentinel.prev;
-            Node newLast = new Node(sentinel, item, oldLast);
+            Node newLast = new Node(oldLast, item, sentinel);
             sentinel.prev = newLast;
             oldLast.next = newLast;
             size += 1;
