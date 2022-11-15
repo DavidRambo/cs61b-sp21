@@ -1,6 +1,7 @@
 package deque;
 
 import org.junit.Test;
+import edu.princeton.cs.algs4.StdRandom;
 
 import java.util.Optional;
 
@@ -209,5 +210,40 @@ public class LinkedListDequeTest {
         assertEquals("Item at index 1 should be 2.", 2, value);
         // Confirm size is the same.
         assertEquals(3, lld.size());
+    }
+
+    @Test
+    /* Randomly adds to and removes from deque. */
+    public void randomLLDequeTest() {
+        LinkedListDeque<Integer> lld = new LinkedListDeque<>();
+        int size = 0;
+
+        int N = 1000;
+        for (int i = 0; i < N; i++) {
+            int operationNumber = StdRandom.uniform(0, 4);
+            if (operationNumber == 0) {
+                int randVal = StdRandom.uniform(0, 100);
+                lld.addFirst(randVal);
+                size += 1;
+                assertEquals(size, lld.size());
+            } else if (operationNumber == 1) {
+                int randVal = StdRandom.uniform(0, 100);
+                lld.addLast(randVal);
+                size += 1;
+                assertEquals(size, lld.size());
+            } else if (operationNumber == 2) {
+                lld.removeFirst();
+                if (size > 0) {
+                    size -= 1;
+                }
+                assertEquals(size, lld.size());
+            } else if (operationNumber == 3) {
+                lld.removeLast();
+                if (size > 0) {
+                    size -= 1;
+                }
+                assertEquals(size, lld.size());
+            }
+        }
     }
 }

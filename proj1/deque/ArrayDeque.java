@@ -81,12 +81,12 @@ public class ArrayDeque<T> {
             return null;
         } else if (front == items.length - 1 && front != back) {
             // Circular condition and not a one-item array.
+            items[front] = null;
             front = 0;
         } else if (front != back) {
+            items[front] = null;
             front += 1;
         }
-
-        items[front] = null;
         size -= 1;
 
         // Check usage ratio and resize if < 0.25
@@ -106,16 +106,15 @@ public class ArrayDeque<T> {
             return null;
         } else if (back == 0 && front != back) {
             // Circular condition and more than one item in array.
+            items[back] = null;
             back = items.length - 1;
         } else if (front != back) {
             // Check for 1-item array; i.e. front == back
+            items[back] = null;
             back -= 1;
         }
 
-        items[back] = null;
-
         size -= 1;
-
         // Check usage ratio and resize if < 0.25
         // but do not shrink smaller than length of 8.
         if ((items.length > 8) && ((float) size/ items.length) < 0.25) {
@@ -131,9 +130,8 @@ public class ArrayDeque<T> {
      * If that is > length, then subtract length from it.
      * Example:
      * [2, 3, 4, 5, 6, 7, null, null, null, null, 0, 1]
-     * front = 10, index = 6
+     * front = 10, index = 6, length = 12
      * location = 4 -> items[4] = 6
-     * length = 12
      * 6 + 10 = 16 -> 16 - 12 = 4
      * */
     public T get(int index) {
@@ -149,23 +147,21 @@ public class ArrayDeque<T> {
     public void printDeque() {
         int position = front;
 
-        // Iterate from front to back, checking for end of array (circular).
-        // If circular, then position will always be > back.
-        while (position <= back || position < items.length) {
-            System.out.print(items[position] + " ");
-            position += 1;
-        }
-
-        // If end of array is met and back is not, then iterate from items[0] to back.
-        if (back < position) {
-            position = 0;
-            while (position <= back) {
+        // Check for circularity.
+        if (front > back) {
+            // Print to end of array.
+            while (position < items.length) {
                 System.out.print(items[position] + " ");
                 position += 1;
             }
+            // Reset position to index 0 and print to back.
+            position = 0;
         }
 
-//        System.out.print(items[position + 1]);
+        while (position <= back) {
+            System.out.print(items[position] + " ");
+            position += 1;
+        }
 
         System.out.println();
     }

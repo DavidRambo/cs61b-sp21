@@ -49,21 +49,41 @@ public class LinkedListDeque<T> {
 //        return sentinel.next == sentinel;
     }
 
+    /** Helper method for adding the first/last item to an empty deque. */
+    private void addNew(T item) {
+        Node first = new Node(sentinel, item, sentinel);
+        sentinel.next = first;
+        sentinel.prev = first;
+        size = 1;
+    }
+
     /** Add new Node to the front of the deque. */
     public void addFirst(T item) {
-        sentinel.next = new Node(sentinel, item, sentinel.next);
-        size += 1;
+        // Check whether this is first item being added.
+        if (size == 0) {
+            addNew(item);
+        } else {
+            Node oldFirst = sentinel.next;
+            sentinel.next = new Node(oldFirst, item, sentinel);
+            size += 1;
+        }
     }
 
     /** Add new Node to the end of the deque.
      * */
     public void addLast(T item) {
-        // Reach the end using sentinel.prev. Set new last item to have
-        // a next = sentinel and a prev = the old last.
-        Node oldLast = sentinel.prev;
-        sentinel.prev = new Node(oldLast, item, sentinel);
-        oldLast.next = sentinel.prev;
-        size += 1;
+        // Check whether this is first item being added.
+        if (size == 0) {
+            addNew(item);
+        } else {
+            // Access the end using sentinel.prev. Set new last item to have
+            // its next = sentinel and its prev = the old last.
+            Node oldLast = sentinel.prev;
+            Node newLast = new Node(sentinel, item, oldLast);
+            sentinel.prev = newLast;
+            oldLast.next = newLast;
+            size += 1;
+        }
     }
 
     /** Prints the items in the deque from first to last, separated by a space.
@@ -85,8 +105,12 @@ public class LinkedListDeque<T> {
     public T removeFirst() {
 //        if (sentinel.next != sentinel) {
         if (!isEmpty()) {
+            // Get item of first node.
             T firstItem = sentinel.next.item;
+            // Set sentinel.next to point to second node.
             sentinel.next = sentinel.next.next;
+            // Set that second node's prev to point to sentinel.
+            sentinel.next.prev = sentinel;
             size -= 1;
             return firstItem;
         }
@@ -99,14 +123,19 @@ public class LinkedListDeque<T> {
      */
     public T removeLast() {
         if (!isEmpty()) {
+            // Get last node's item for return value.
             T lastItem = sentinel.prev.item;
+            // Create a name to point to second-to-last node.
             Node newLast = sentinel.prev.prev;
+            // Set sentinel.prev to skip over last node to second-to-last node.
             sentinel.prev = newLast;
+            // Set second-to-last's next to skip over last node to sentinel.
             newLast.next = sentinel;
             size -= 1;
             return lastItem;
+        } else {
+            return null;
         }
-        return null;
     }
 
     /** Returns the item at the given index, where 0 is the front.

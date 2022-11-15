@@ -2,6 +2,8 @@ package deque;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
+import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.StdRandom;
 
 public class ArrayDequeTest {
 
@@ -138,5 +140,58 @@ public class ArrayDequeTest {
         String testPrint = "0 1 2 3 4 5 6 7\n";
         System.out.println(testPrint);
         adi.printDeque();
+    }
+
+    @Test
+    public void randomizedTest() {
+        LinkedListDeque<Integer> L = new LinkedListDeque<>();
+        ArrayDeque<Integer> A = new ArrayDeque<>();
+        int size = 0;
+
+        int N = 5000;
+        for (int i = 0; i < N; i += 1) {
+            int operationNumber = StdRandom.uniform(0, 5);
+            if (operationNumber == 0) {
+                // addLast
+                int randVal = StdRandom.uniform(0, 100);
+                L.addLast(randVal);
+                A.addLast(randVal);
+                size += 1;
+                assertEquals(size, L.size());
+            } else if (operationNumber == 1) {
+                // addFirst and size
+                int randVal = StdRandom.uniform(0, 100);
+                L.addFirst(randVal);
+                A.addFirst(randVal);
+                size += 1;
+                assertEquals(size, L.size());
+                int sizeL = L.size();
+                int sizeA = A.size();
+                assertEquals(sizeL, sizeA);
+            } else if (operationNumber == 2) {
+                // get if size is non-zero
+                if (L.size() > 1) {
+                    int randIndex = StdRandom.uniform(0, L.size() - 1);
+                    int getL = L.get(randIndex);
+                    int getA = A.get(randIndex);
+                    assertEquals(getL, getA);
+                }
+            } else if (operationNumber == 3) {
+                // removeLast if size is non-zero
+                L.removeLast();
+                A.removeLast();
+                if (size > 0) {
+                    size -= 1;
+                }
+                assertEquals(size, L.size());
+            } else if (operationNumber == 4) {
+                L.removeFirst();
+                A.removeFirst();
+                if (size > 0) {
+                    size -= 1;
+                }
+                assertEquals(size, L.size());
+            }
+        }
     }
 }
