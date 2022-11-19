@@ -1,6 +1,8 @@
 package deque;
 
-public class ArrayDeque<T> {
+import java.util.Iterator;
+
+public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private int size;
     private T[] items;
     private int front;
@@ -21,11 +23,6 @@ public class ArrayDeque<T> {
         front = 4;
         back = 4;
         size = 0;
-    }
-
-    /** Returns true if deque is empty. */
-    public boolean isEmpty() {
-        return size == 0;
     }
 
     /** Returns the size of the deque as an int. */
@@ -173,10 +170,10 @@ public class ArrayDeque<T> {
 
     /** Resizes the array.
      * Note that because the capacity changes by factors of 2, and starting capacity is 8,
-     * capacity will always be divisible by 4. This integer is used to reset the front position. */
+     * capacity will always be divisible by 2. This integer is used to reset the front position. */
     public void resize(int capacity) {
         T[] temp = (T[]) new Object[capacity];
-        int start = capacity / 4;
+        int start = capacity / 2;
         // For circular array, front will be at higher index than back.
         if (front > back) {
             // First, copy from front of deque to end of array.
@@ -192,5 +189,53 @@ public class ArrayDeque<T> {
         front = start;
         back = front + size - 1;
         items = temp;
+    }
+
+    // TODO: Iterator
+    public Iterator<T> iterator() {
+        return new ADequeIterator();
+    }
+
+    private class ADequeIterator implements Iterator<T> {
+        private int iterPosition;
+
+        public ADequeIterator() {
+            iterPosition = 0;
+        }
+
+        public boolean hasNext() {
+            return iterPosition != back;
+        }
+
+        public T next() {
+            T returnItem = items[iterPosition];
+            iterPosition += 1;
+            return returnItem;
+        }
+    }
+
+    // TODO: equals()
+    @Override
+    public boolean equals(Object o) {
+        // For efficiency, check equality of reference.
+        if (this == o) { return true; }
+
+        if (o instanceof ArrayDeque otherAD) {
+            if (otherAD.size() != this.size()) {
+                return false;
+            }
+
+            // Check that all MY items are in the other array set in order.
+            // And b/c they are the same size, this will match all items.
+            for (int i = 0; i < size(); i++) {
+                T myItem = get(i);
+                T otherItem = (T) otherAD.get(i);
+                if (!myItem.equals(otherItem)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 }

@@ -112,8 +112,18 @@ public class ArrayDequeTest {
         }
         assertEquals(25, adi.size());
 
-        for (int i = 0; i < 18; i++) {
+        for (int i = 0; i < 10; i++) {
             adi.removeFirst();
+        }
+
+        for (int i = 0; i < 1000; i++) {
+            int randVal = StdRandom.uniform(0, 2);
+            if (randVal == 0) {
+                adi.removeLast();
+                adi.removeLast();
+            } else if ( randVal == 1) {
+                adi.addLast(randVal);
+            }
         }
     }
 
@@ -165,9 +175,6 @@ public class ArrayDequeTest {
                 A.addFirst(randVal);
                 size += 1;
                 assertEquals(size, A.size());
-//                assertEquals(size, L.size());
-//                int sizeA = A.size();
-//                assertEquals(size, A.size());
             } else if (operationNumber == 2) {
                 // get if size is non-zero
                 if (size > 1) {

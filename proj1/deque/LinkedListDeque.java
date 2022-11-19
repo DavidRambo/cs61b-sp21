@@ -1,12 +1,14 @@
 package deque;
 
+import java.util.Iterator;
+
 /**
  * Linked List Deque class implementation.
  * CS61B Spring 2021 Project 1
  * author: David Rambo
  * */
 
-public class LinkedListDeque<T> {
+public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     private class Node {
         public Node prev;
         public T item;
@@ -43,12 +45,6 @@ public class LinkedListDeque<T> {
         return size;
     }
 
-    /** Returns true if deque is empty. */
-    public boolean isEmpty() {
-        return size == 0;
-//        return sentinel.next == sentinel;
-    }
-
     /** Helper method for adding the first/last item to an empty deque. */
     private void addNew(T item) {
         Node first = new Node(sentinel, item, sentinel);
@@ -60,7 +56,7 @@ public class LinkedListDeque<T> {
     /** Add new Node to the front of the deque. */
     public void addFirst(T item) {
         // Check whether this is first item being added.
-        if (size == 0) {
+        if (isEmpty()) {
             addNew(item);
         } else {
             Node oldFirst = sentinel.next;
@@ -74,7 +70,7 @@ public class LinkedListDeque<T> {
      * */
     public void addLast(T item) {
         // Check whether this is first item being added.
-        if (size == 0) {
+        if (isEmpty()) {
             addNew(item);
         } else {
             // Access the end using sentinel.prev. Set new last item to have
@@ -171,6 +167,53 @@ public class LinkedListDeque<T> {
         }
     }
 
-    // TODO: public Iterator<Type> iterator()
-    // TODO: public boolean equals(Object o)
+    // TODO: Test public Iterator<T> iterator()
+    public Iterator<T> iterator() {
+        return new LLDequeIterator();
+    }
+    private class LLDequeIterator implements Iterator<T> {
+        private Node iterNode;
+
+        public LLDequeIterator() {
+            iterNode = sentinel.next;
+        }
+
+        public boolean hasNext() {
+            return iterNode != sentinel;
+        }
+
+        public T next() {
+            T returnItem = iterNode.item;
+            iterNode = iterNode.next;
+            return returnItem;
+        }
+    }
+
+    // TODO: Test public boolean equals(Object o)
+    @Override
+    public boolean equals(Object o) {
+        // For efficiency, check equality of reference.
+        if (this == o) {
+            return true;
+        }
+
+        if (o instanceof LinkedListDeque otherLLD) {
+            // Check that Deques are of equal size.
+            if (otherLLD.size() != this.size()) {
+                return false;
+            }
+
+            // Check that all of MY items are in the other Deque in the same order.
+            // And b/c they are the same size, this will check all items.
+            for (int i = 0; i < size(); i++) {
+                T myItem = get(i);
+                T otherItem = (T) otherLLD.get(i);
+                if (!myItem.equals(otherItem)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
 }
