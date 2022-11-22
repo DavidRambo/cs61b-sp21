@@ -246,4 +246,26 @@ public class LinkedListDequeTest {
             }
         }
     }
+
+    @Test
+    public void equalsTest() {
+        LinkedListDeque<String> lld1 = new LinkedListDeque<>("a");
+        lld1.addLast("b");
+        lld1.addLast("c");
+        lld1.addLast("d");
+        lld1.addLast("e");
+        lld1.addLast("f");
+
+        LinkedListDeque<String> lld2 = new LinkedListDeque<>("a");
+        lld2.addLast("b");
+        lld2.addLast("c");
+        lld2.addLast("d");
+        lld2.addLast("e");
+
+        assertFalse(lld1.equals(lld2));
+
+        lld2.addLast("f");
+
+        assertTrue(lld1.equals(lld2));
+    }
 }

@@ -26,11 +26,13 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     }
 
     /** Returns the size of the deque as an int. */
+    @Override
     public int size() {
         return size;
     }
 
     /** Adds an item to the front of the deque. */
+    @Override
     public void addFirst(T item) {
         // Check for availability in array.
         if (size == items.length) {
@@ -50,6 +52,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     }
 
     /** Adds an item to the end of the deque. */
+    @Override
     public void addLast(T item) {
         // Check whether array is full.
         if (size == items.length) {
@@ -71,6 +74,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     /** Removes the item at the front of the deque and returns it.
      * If no item exists, then returns null.
      */
+    @Override
     public T removeFirst() {
         T removed = items[front];
 
@@ -99,6 +103,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     /** Removes the item at the end of the deque and returns it.
      * If no item exists, then returns null. */
+    @Override
     public T removeLast() {
         T removed = items[back];
 
@@ -136,6 +141,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
      * location = 4 -> items[4] = 6
      * 6 + 10 = 16 -> 16 - 12 = 4
      * */
+    @Override
     public T get(int index) {
         int location = front + index;
         // Check for circularity
@@ -146,6 +152,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     }
 
     /** Prints the items in the deque from front to back, separated by a space. */
+    @Override
     public void printDeque() {
         int position = front;
 
@@ -191,7 +198,6 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         items = temp;
     }
 
-    // TODO: Iterator
     public Iterator<T> iterator() {
         return new ADequeIterator();
     }
@@ -214,13 +220,13 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         }
     }
 
-    // TODO: equals()
     @Override
     public boolean equals(Object o) {
         // For efficiency, check equality of reference.
         if (this == o) { return true; }
 
-        if (o instanceof ArrayDeque otherAD) {
+        if (o instanceof ArrayDeque) {
+            ArrayDeque<T> otherAD = (ArrayDeque<T>) o;
             if (otherAD.size() != this.size()) {
                 return false;
             }

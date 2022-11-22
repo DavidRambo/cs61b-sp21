@@ -201,4 +201,23 @@ public class ArrayDequeTest {
             }
         }
     }
+
+    @Test
+    public void equalsTest() {
+        ArrayDeque<String> ad1 = new ArrayDeque<>("a");
+        ad1.addLast("b");
+        ad1.addLast("c");
+        ad1.addLast("d");
+        ad1.addLast("e");
+
+        ArrayDeque<String> ad2 = new ArrayDeque<>("a");
+        ad2.addLast("b");
+        ad2.addLast("c");
+        ad2.addLast("d");
+
+        assertFalse(ad1.equals(ad2));
+
+        ad2.addLast("e");
+        assertTrue(ad1.equals(ad2));
+    }
 }
