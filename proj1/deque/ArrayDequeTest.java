@@ -5,6 +5,8 @@ import static org.junit.Assert.*;
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdRandom;
 
+import java.util.Iterator;
+
 public class ArrayDequeTest {
 
     @Test
@@ -204,6 +206,27 @@ public class ArrayDequeTest {
                 }
                 assertEquals(size, L.size());
             }
+        }
+    }
+
+    @Test
+    public void iterTest() {
+        ArrayDeque<Integer> ad1 = new ArrayDeque<>();
+        int[] testInts = {0, 1, 2, 3, 4};
+        for (int i = 0; i < 5; i++) {
+            ad1.addLast(i);
+        }
+
+        Iterator<Integer> iterObject = ad1.iterator();
+        int i = 0;
+        while (iterObject.hasNext()) {
+            int j = iterObject.next();
+            assertEquals("Values should be equal.", testInts[i], j);
+            i += 1;
+        }
+
+        for (int k : ad1) {
+            System.out.println(k);
         }
     }
 

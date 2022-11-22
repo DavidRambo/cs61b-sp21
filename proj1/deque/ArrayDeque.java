@@ -147,20 +147,20 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         return new ADequeIterator();
     }
 
-    private class ADequeIterator implements Iterator<T> {
-        private int iterPosition;
+    private class ADequeIterator<T> implements Iterator<T> {
+        private int position;
 
-        public ADequeIterator() {
-            iterPosition = 0;
+        ADequeIterator() {
+            position = 0;
         }
 
         public boolean hasNext() {
-            return iterPosition != nextLast;
+            return position < size;
         }
 
         public T next() {
-            T returnItem = items[iterPosition];
-            iterPosition += 1;
+            T returnItem = (T) get(position);
+            position += 1;
             return returnItem;
         }
     }
@@ -168,7 +168,9 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     @Override
     public boolean equals(Object o) {
         // For efficiency, check equality of reference.
-        if (this == o) { return true; }
+        if (this == o) {
+            return true;
+        }
 
         if (o instanceof Deque) {
             Deque<T> otherDeque = (Deque<T>) o;

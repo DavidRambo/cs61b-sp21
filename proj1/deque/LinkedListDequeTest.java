@@ -3,6 +3,7 @@ package deque;
 import org.junit.Test;
 import edu.princeton.cs.algs4.StdRandom;
 
+import java.util.Iterator;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
@@ -244,6 +245,27 @@ public class LinkedListDequeTest {
                 }
                 assertEquals(size, lld.size());
             }
+        }
+    }
+
+    @Test
+    public void iterTest() {
+        LinkedListDeque<Integer> lld1 = new LinkedListDeque<>();
+        int[] testInts = {0, 1, 2, 3, 4};
+        for (int i = 0; i < 5; i++) {
+            lld1.addLast(i);
+        }
+
+        Iterator<Integer> iterObject = lld1.iterator();
+        int i = 0;
+        while (iterObject.hasNext()) {
+            int j = iterObject.next();
+            assertEquals("Values should be equal.", testInts[i], j);
+            i += 1;
+        }
+
+        for (int k : lld1) {
+            System.out.println(k);
         }
     }
 
