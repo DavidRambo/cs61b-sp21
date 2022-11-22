@@ -5,10 +5,10 @@ import edu.princeton.cs.algs4.StdDraw;
 public class GuitarHero {
 
     public static void main(String[] args) {
-        String KEYBOARD = "q2we4r5ty7u8i9op-[=zxdcfvgbnjmk,.;/' ";
-        GuitarString[] guitar = new GuitarString[KEYBOARD.length()];
+        String keyboard = "q2we4r5ty7u8i9op-[=zxdcfvgbnjmk,.;/' ";
+        GuitarString[] guitar = new GuitarString[keyboard.length()];
 
-        for (int i = 0; i < KEYBOARD.length(); i++) {
+        for (int i = 0; i < keyboard.length(); i++) {
             double freq = 440 * Math.pow(2, (i - 24) / 12.0);
             guitar[i] = new GuitarString(freq);
         }
@@ -18,7 +18,7 @@ public class GuitarHero {
             if (StdDraw.hasNextKeyTyped()) {
                 char key = StdDraw.nextKeyTyped();
                 /* Determine whether the pressed key corresponds to KEYBOARD. */
-                int index = KEYBOARD.indexOf(key);
+                int index = keyboard.indexOf(key);
                 if (index != -1) {
                     guitar[index].pluck();
                 }
@@ -26,7 +26,7 @@ public class GuitarHero {
 
             /* Superposition of samples. */
             double sample = 0;
-            for (int i = 0; i < KEYBOARD.length(); i++) {
+            for (int i = 0; i < keyboard.length(); i++) {
                 sample += guitar[i].sample();
             }
 
@@ -34,7 +34,7 @@ public class GuitarHero {
             StdAudio.play(sample);
 
             /* Advance the simulation of each guitar string by one step. */
-            for (int i = 0; i < KEYBOARD.length(); i++) {
+            for (int i = 0; i < keyboard.length(); i++) {
                 guitar[i].tic();
             }
         }
