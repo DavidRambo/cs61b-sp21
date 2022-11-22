@@ -9,6 +9,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private int back;
 
     /** Constructor class for ArrayDeque. */
+/* Removed for course autograder.
     public ArrayDeque(T i) {
         items = (T[]) new Object[8];
         items[4] = i;
@@ -16,6 +17,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         back = 4;
         size = 1;
     }
+*/
 
     /** Creates empty ArrayDeque. */
     public ArrayDeque() {
@@ -93,8 +95,8 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         }
         size -= 1;
 
-        // Check usage ratio and resize if < 0.25
-        // but do not shrink smaller than length of 8.
+        /* Check usage ratio and resize if < 0.25
+        but do not shrink smaller than length of 8. */
         if ((items.length > 8) && ((float) size/ items.length) < 0.25) {
             resize(items.length / 2);
         }
@@ -178,7 +180,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     /** Resizes the array.
      * Note that because the capacity changes by factors of 2, and starting capacity is 8,
      * capacity will always be divisible by 2. This integer is used to reset the front position. */
-    public void resize(int capacity) {
+    private void resize(int capacity) {
         T[] temp = (T[]) new Object[capacity];
         int start = capacity / 2;
         // For circular array, front will be at higher index than back.
