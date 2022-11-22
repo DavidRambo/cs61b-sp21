@@ -1,9 +1,11 @@
-/** Class that prints the Collatz sequence starting from a given number.
- *  @author YOUR NAME HERE
+/**
+ * Class that prints the Collatz sequence starting from a given number.
+ * 
+ * @author David Rambo
  */
 public class Collatz {
 
-    /** Buggy implementation of nextNumber! */
+    /** Returns the nextNumber in a Collatz sequence. */
     public static int nextNumber(int n) {
         if (n % 2 == 0) {
             return (n / 2);
@@ -22,4 +24,3 @@ public class Collatz {
         System.out.println();
     }
 }
-
