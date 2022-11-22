@@ -219,5 +219,13 @@ public class ArrayDequeTest {
 
         ad2.addLast("e");
         assertTrue(ad1.equals(ad2));
+
+        LinkedListDeque<String> lld2 = new LinkedListDeque<>("a");
+        lld2.addLast("b");
+        lld2.addLast("c");
+        lld2.addLast("d");
+        lld2.addLast("e");
+
+        assertTrue(ad1.equals(lld2));
     }
 }

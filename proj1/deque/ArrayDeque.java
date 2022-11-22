@@ -225,9 +225,9 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         // For efficiency, check equality of reference.
         if (this == o) { return true; }
 
-        if (o instanceof ArrayDeque) {
-            ArrayDeque<T> otherAD = (ArrayDeque<T>) o;
-            if (otherAD.size() != this.size()) {
+        if (o instanceof Deque) {
+            Deque<T> otherDeque = (Deque<T>) o;
+            if (otherDeque.size() != this.size()) {
                 return false;
             }
 
@@ -235,7 +235,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             // And b/c they are the same size, this will match all items.
             for (int i = 0; i < size(); i++) {
                 T myItem = get(i);
-                T otherItem = (T) otherAD.get(i);
+                T otherItem = (T) otherDeque.get(i);
                 if (!myItem.equals(otherItem)) {
                     return false;
                 }

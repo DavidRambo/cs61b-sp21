@@ -203,10 +203,10 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
             return true;
         }
 
-        if (o instanceof LinkedListDeque) {
-            LinkedListDeque<T> otherLLD = (LinkedListDeque<T>) o;
+        if (o instanceof Deque) {
+            Deque<T> otherDeque = (Deque<T>) o;
             // Check that Deques are of equal size.
-            if (otherLLD.size() != this.size()) {
+            if (otherDeque.size() != this.size()) {
                 return false;
             }
 
@@ -214,7 +214,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
             // And b/c they are the same size, this will check all items.
             for (int i = 0; i < size(); i++) {
                 T myItem = get(i);
-                T otherItem = (T) otherLLD.get(i);
+                T otherItem = (T) otherDeque.get(i);
                 if (!myItem.equals(otherItem)) {
                     return false;
                 }
