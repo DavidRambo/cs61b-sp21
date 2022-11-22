@@ -5,26 +5,25 @@ import java.util.Iterator;
 public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private int size;
     private T[] items;
-    private int front;
-    private int back;
-
-    /** Constructor class for ArrayDeque. */
-/* Removed for course autograder.
-    public ArrayDeque(T i) {
-        items = (T[]) new Object[8];
-        items[4] = i;
-        front = 4;
-        back = 4;
-        size = 1;
-    }
-*/
+    private int nextFirst;
+    private int nextLast;
 
     /** Creates empty ArrayDeque. */
     public ArrayDeque() {
         items = (T[]) new Object[8];
-        front = 4;
-        back = 4;
+        nextFirst = 4;
+        nextLast = 5;
         size = 0;
+    }
+
+    /** Returns the index of the first item. */
+    private int getFirstIndex() {
+        return (nextFirst + 1) % items.length;
+    }
+
+    /** Returns the index of the last item. */
+    private int getLastIndex() {
+        return ((nextLast - 1) + items.length) % items.length;
     }
 
     /** Returns the size of the deque as an int. */
@@ -41,16 +40,9 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             resize(2 * size);
         }
 
-        // Check for circular repositioning of front.
-        // Note that there is no risk of front meeting back due to above resize check.
-        if (front == 0) {
-            front = items.length - 1;
-        } else if (!isEmpty()) {
-            // Non-empty list, so move front.
-            front -= 1;
-        }
-        items[front] = item;
+        items[nextFirst] = item;
         size += 1;
+        nextFirst = (nextFirst - 1 + items.length) % items.length;
     }
 
     /** Adds an item to the end of the deque. */
@@ -61,16 +53,9 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             resize(2 * size);
         }
 
-        // Check for circular repositioning of back.
-        if (back == items.length - 1) {
-            back = 0;
-        } else if (!isEmpty()) {
-            // Non-empty list, so move back.
-            back += 1;
-        }
-
-        items[back] = item;
+        items[nextLast] = item;
         size += 1;
+        nextLast = (nextLast + 1) % items.length;
     }
 
     /** Removes the item at the front of the deque and returns it.
@@ -78,28 +63,17 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
      */
     @Override
     public T removeFirst() {
-        T removed = items[front];
+        T removed = items[getFirstIndex()];
 
         if (removed == null) {
             return null;
-        } else if (front == back) {
-            // One-item array, so front and back remain the same.
-            items[front] = null;
-        } else if (front == items.length - 1) {
-            // Circular condition and not a one-item array.
-            items[front] = null;
-            front = 0;
-        } else {
-            items[front] = null;
-            front += 1;
         }
-        size -= 1;
 
-        /* Check usage ratio and resize if < 0.25
-        but do not shrink smaller than length of 8. */
-        if ((items.length > 8) && ((float) size/ items.length) < 0.25) {
-            resize(items.length / 2);
-        }
+        items[getFirstIndex()] = null;
+        nextFirst = (nextFirst + 1) % items.length;
+        size -= 1;
+        checkSize();
+
         return removed;
     }
 
@@ -107,97 +81,66 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
      * If no item exists, then returns null. */
     @Override
     public T removeLast() {
-        T removed = items[back];
+        T removed = items[getLastIndex()];
 
         if (removed == null) {
             return null;
-        } else if (front == back) {
-            // One-item array, so front and back remain the same.
-            items[back] = null;
-        } else if (back == 0) {
-            // Circular condition and more than one item in array.
-            items[back] = null;
-            back = items.length - 1;
-        } else {
-            items[back] = null;
-            back -= 1;
         }
 
+        items[getLastIndex()] = null;
+        nextLast = ((nextLast - 1) + items.length) % items.length;
         size -= 1;
-        // Check usage ratio and resize if < 0.25
-        // but do not shrink smaller than length of 8.
-        if ((items.length > 8) && ((float) size/ items.length) < 0.25) {
-            resize(items.length / 2);
-        }
+        checkSize();
         return removed;
     }
 
     /** Gets the item at the given index, where 0 is the front, 1 the next item, etc.
-     * If no such item exists, returns null.
-     * In a non-circular array, location = front + index.
-     * In a circular array, location can still be front + index, if that is < length.
-     * If that is > length, then subtract length from it.
-     * Example:
-     * [2, 3, 4, 5, 6, 7, null, null, null, null, 0, 1]
-     * front = 10, index = 6, length = 12
-     * location = 4 -> items[4] = 6
-     * 6 + 10 = 16 -> 16 - 12 = 4
-     * */
+     * If no such item exists, returns null. */
     @Override
     public T get(int index) {
-        int location = front + index;
-        // Check for circularity
-        if (location >= items.length) {
-            location = location - items.length;
-        }
+        int location = (getFirstIndex() + index) % items.length;
         return items[location];
     }
 
     /** Prints the items in the deque from front to back, separated by a space. */
     @Override
     public void printDeque() {
-        int position = front;
-
-        // Check for circularity.
-        if (front > back) {
-            // Print to end of array.
-            while (position < items.length) {
-                System.out.print(items[position] + " ");
-                position += 1;
-            }
-            // Reset position to index 0 and print to back.
-            position = 0;
-        }
-
-        while (position <= back) {
-            System.out.print(items[position] + " ");
-            position += 1;
+        for (int i = 0; i < size; i++) {
+            System.out.print(get(i) + " ");
         }
 
         System.out.println();
     }
 
+    /** Check usage ratio and resize if < 0.25, but do not shrink smaller than length of 8. */
+    private void checkSize() {
+        if ((items.length > 8) && ((float) size / items.length) < 0.25) {
+            resize(items.length / 2);
+        }
+    }
+
     /** Resizes the array.
      * Note that because the capacity changes by factors of 2, and starting capacity is 8,
-     * capacity will always be divisible by 2. This integer is used to reset the front position. */
+     * capacity will always be divisible by 4. This integer is used to reset the first position. */
     private void resize(int capacity) {
         T[] temp = (T[]) new Object[capacity];
-        int start = capacity / 2;
-        // For circular array, front will be at higher index than back.
-        if (front > back) {
-            // First, copy from front of deque to end of array.
-            int numberOfItems = items.length - front;
-            System.arraycopy(items, front, temp, start, numberOfItems);
-            // Calculate where to pick up for the copy operation.
-            int secondStart = start + numberOfItems;
-            // Then, copy from beginning of array to back of deque.
-            System.arraycopy(items, 0, temp, secondStart, (size - numberOfItems));
+        int start = capacity / 4;
+        int first = getFirstIndex();
+        int last = getLastIndex();
+        // For circular array, first will be at higher index than last.
+        if (first >= last) {
+            // First, copy from first of deque to end of array.
+            System.arraycopy(items, first, temp, start, items.length - first);
+            // Calculate where to continue the copy operation in the new array.
+            int secondStart = start + items.length - first;
+            // Then, copy from beginning of original array to last of deque.
+            System.arraycopy(items, 0, temp, secondStart, last + 1);
         } else {
-            System.arraycopy(items, front, temp, start, size);
+            System.arraycopy(items, first, temp, start, size);
         }
-        front = start;
-        back = front + size - 1;
         items = temp;
+        nextFirst = (start - 1 + items.length) % items.length;
+        nextLast = (nextFirst + size + 1) % items.length;
     }
 
     public Iterator<T> iterator() {
@@ -212,7 +155,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         }
 
         public boolean hasNext() {
-            return iterPosition != back;
+            return iterPosition != nextLast;
         }
 
         public T next() {
@@ -237,7 +180,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             // And b/c they are the same size, this will match all items.
             for (int i = 0; i < size(); i++) {
                 T myItem = get(i);
-                T otherItem = (T) otherDeque.get(i);
+                T otherItem = otherDeque.get(i);
                 if (!myItem.equals(otherItem)) {
                     return false;
                 }

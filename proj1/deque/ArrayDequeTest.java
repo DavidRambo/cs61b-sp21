@@ -10,7 +10,9 @@ public class ArrayDequeTest {
     @Test
     /* Construct an empty and a one-item Array Deque. */
     public void constructorTest() {
-        ArrayDeque<Integer> ad1 = new ArrayDeque<>(5);
+        ArrayDeque<Integer> ad1 = new ArrayDeque<>();
+        ad1.addLast(5);
+        assertFalse(ad1.isEmpty());
         ArrayDeque<Integer> ad2 = new ArrayDeque<>();
         assertTrue(ad2.isEmpty());
     }
@@ -19,7 +21,8 @@ public class ArrayDequeTest {
     /* Add to deque at front and back. Check whether empty.
      */
     public void addFrontAddLastTest() {
-        ArrayDeque<Integer> ad1 = new ArrayDeque<>(5);
+        ArrayDeque<Integer> ad1 = new ArrayDeque<>();
+        ad1.addFirst(5);
         ad1.addFirst(4);
         ad1.addLast(6);
         assertFalse(ad1.isEmpty());
@@ -45,7 +48,8 @@ public class ArrayDequeTest {
     @Test
     /* Add to front and back of deque to resize it. Check size. */
     public void frontBackResizeTest() {
-        ArrayDeque<Integer> ad1 = new ArrayDeque<>(5);
+        ArrayDeque<Integer> ad1 = new ArrayDeque<>();
+        ad1.addFirst(5);
         ad1.addFirst(4);
         ad1.addLast(6);
         ad1.addFirst(3);
@@ -68,7 +72,8 @@ public class ArrayDequeTest {
     @Test
     /* Adds items to the back to cause circular repositioning and resize. */
     public void addLastResizeTest() {
-        ArrayDeque<Integer> ad1 = new ArrayDeque<>(0);
+        ArrayDeque<Integer> ad1 = new ArrayDeque<>();
+        ad1.addLast(0);
         ad1.addLast(1);
         ad1.addLast(2);
         ad1.addLast(3);
@@ -204,13 +209,13 @@ public class ArrayDequeTest {
 
     @Test
     public void equalsTest() {
-        ArrayDeque<String> ad1 = new ArrayDeque<>("a");
+        ArrayDeque<String> ad1 = new ArrayDeque<>();
         ad1.addLast("b");
         ad1.addLast("c");
         ad1.addLast("d");
         ad1.addLast("e");
 
-        ArrayDeque<String> ad2 = new ArrayDeque<>("a");
+        ArrayDeque<String> ad2 = new ArrayDeque<>();
         ad2.addLast("b");
         ad2.addLast("c");
         ad2.addLast("d");
@@ -220,7 +225,7 @@ public class ArrayDequeTest {
         ad2.addLast("e");
         assertTrue(ad1.equals(ad2));
 
-        LinkedListDeque<String> lld2 = new LinkedListDeque<>("a");
+        LinkedListDeque<String> lld2 = new LinkedListDeque<>();
         lld2.addLast("b");
         lld2.addLast("c");
         lld2.addLast("d");

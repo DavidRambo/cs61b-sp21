@@ -29,9 +29,6 @@ public class LinkedListDequeTest {
     public void isEmptyTest() {
         LinkedListDeque<String> llds = new LinkedListDeque<>();
         assertTrue(llds.isEmpty());
-        LinkedListDeque<Integer> lldi = new LinkedListDeque<Integer>(5);
-        assertFalse(lldi.isEmpty());
-
     }
 
     @Test
@@ -133,7 +130,8 @@ public class LinkedListDequeTest {
      * Then remove from the end.
      */
     public void addLastRemoveLastTest() {
-        LinkedListDeque<Integer> lld1 = new LinkedListDeque<>(1);
+        LinkedListDeque<Integer> lld1 = new LinkedListDeque<>();
+        lld1.addLast(1);
         lld1.addLast(2);
         lld1.addLast(3);
         lld1.addLast(4);
@@ -191,7 +189,8 @@ public class LinkedListDequeTest {
     @Test
     /* Get non-existent item and then existent item. */
     public void getItemTest() {
-        LinkedListDeque<Integer> lld = new LinkedListDeque(1);
+        LinkedListDeque<Integer> lld = new LinkedListDeque<>();
+        lld.addLast(1);
         lld.addLast(2);
         lld.addLast(3);
         assertNull("No item at index, should be null.", lld.get(3));
@@ -202,7 +201,8 @@ public class LinkedListDequeTest {
     @Test
     /* Use getRecursive to get non-existent and existent items. */
     public void getItemRecursiveTest() {
-        LinkedListDeque<Integer> lld = new LinkedListDeque(1);
+        LinkedListDeque<Integer> lld = new LinkedListDeque<>();
+        lld.addFirst(1);
         lld.addLast(2);
         lld.addLast(3);
         assertNull("No item at index, should be null.", lld.getRecursive(3));
@@ -249,14 +249,14 @@ public class LinkedListDequeTest {
 
     @Test
     public void equalsTest() {
-        LinkedListDeque<String> lld1 = new LinkedListDeque<>("a");
+        LinkedListDeque<String> lld1 = new LinkedListDeque<>();
         lld1.addLast("b");
         lld1.addLast("c");
         lld1.addLast("d");
         lld1.addLast("e");
         lld1.addLast("f");
 
-        LinkedListDeque<String> lld2 = new LinkedListDeque<>("a");
+        LinkedListDeque<String> lld2 = new LinkedListDeque<>();
         lld2.addLast("b");
         lld2.addLast("c");
         lld2.addLast("d");

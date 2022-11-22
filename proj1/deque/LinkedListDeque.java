@@ -31,16 +31,6 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         size = 0;
     }
 
-    /** Constructor method for a LLD with a circular sentinel node.
-     * Removed for course autograder. */
-//    public LinkedListDeque(T i) {
-//        Node first;
-//        first = new Node(sentinel, i, sentinel);
-//        sentinel.next = first;
-//        sentinel.prev = first;
-//        size = 1;
-//    }
-
     /** Returns the size of the deque. */
     @Override
     public int size() {
