@@ -21,10 +21,10 @@ public class TestArrayDequeEC {
                 // addLast
                 int randVal = StdRandom.uniform(0, 100);
                 sad1.addLast(randVal);
-                sad1.addLast(randVal + 1);
                 ads1.addLast(randVal);
-                ads1.addLast(randVal + 1);
                 errMsg.append("addLast(").append(randVal).append(")\n");
+                sad1.addLast(randVal + 1);
+                ads1.addLast(randVal + 1);
                 errMsg.append("addLast(").append(randVal + 1).append(")\n");
                 errMsg.append("size()\n");
                 assertEquals(String.valueOf(errMsg), sad1.size(), ads1.size());
@@ -32,10 +32,10 @@ public class TestArrayDequeEC {
                 // addFirst
                 int randVal = StdRandom.uniform(0, 100);
                 sad1.addFirst(randVal);
-                sad1.addFirst(randVal + 1);
                 ads1.addFirst(randVal);
-                ads1.addFirst(randVal + 1);
                 errMsg.append("addFirst(").append(randVal).append(")\n");
+                sad1.addFirst(randVal + 1);
+                ads1.addFirst(randVal + 1);
                 errMsg.append("addFirst(").append(randVal + 1).append(")\n");
                 errMsg.append("size()\n");
                 assertEquals(String.valueOf(errMsg), sad1.size(), ads1.size());
@@ -45,20 +45,16 @@ public class TestArrayDequeEC {
         errMsg = new StringBuilder();
         for (int i = 0; i < N; i++) {
             int opNumber = StdRandom.uniform(0, 2);
-            if (opNumber == 0) {
-                if (ads1.size() > 0) {
-                    Integer sadFirst = sad1.removeFirst();
-                    Integer adsFirst = ads1.removeFirst();
-                    errMsg.append("removeFirst()\n");
-                    assertEquals(String.valueOf(errMsg), sadFirst, adsFirst);
-                }
-            } else if (opNumber == 1) {
-                if (ads1.size() > 0) {
-                    Integer sadLast = sad1.removeLast();
-                    Integer adsLast = ads1.removeLast();
-                    errMsg.append("removeLast()\n");
-                    assertEquals(String.valueOf(errMsg), sadLast, adsLast);
-                }
+            if (opNumber == 0 && sad1.size() > 0) {
+                Integer sadFirst = sad1.removeFirst();
+                Integer adsFirst = ads1.removeFirst();
+                errMsg.append("removeFirst()\n");
+                assertEquals(String.valueOf(errMsg), adsFirst, sadFirst);
+            } else if (opNumber == 1 && sad1.size() > 0) {
+                Integer sadLast = sad1.removeLast();
+                Integer adsLast = ads1.removeLast();
+                errMsg.append("removeLast()\n");
+                assertEquals(String.valueOf(errMsg), adsLast, sadLast);
             }
         }
     }
