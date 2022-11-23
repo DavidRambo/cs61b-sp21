@@ -50,10 +50,12 @@ public class TestArrayDequeEC {
                 Integer adsFirst = ads1.removeFirst();
                 errMsg.append("removeFirst()\n");
                 assertEquals(String.valueOf(errMsg), adsFirst, sadFirst);
+                assertEquals(String.valueOf(errMsg), ads1.size(), sad1.size());
             } else if (opNumber == 1 && sad1.size() > 0) {
                 Integer sadLast = sad1.removeLast();
                 Integer adsLast = ads1.removeLast();
                 errMsg.append("removeLast()\n");
+                assertEquals(String.valueOf(errMsg), ads1.size(), sad1.size());
                 assertEquals(String.valueOf(errMsg), adsLast, sadLast);
             }
         }
