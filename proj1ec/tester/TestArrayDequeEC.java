@@ -11,55 +11,59 @@ public class TestArrayDequeEC {
     @Test
     public void randomArrayTest() {
         StudentArrayDeque<Integer> sad1 = new StudentArrayDeque<>();
-        StudentArrayDeque<Integer> sad2 = new StudentArrayDeque<>();
-        int size = 0;
+        ArrayDequeSolution<Integer> ads1 = new ArrayDequeSolution<>();
+        int N = 20;
 
-        int N = 100;
+        StringBuilder errMsg = new StringBuilder();
         for (int i = 0; i < N; i ++) {
-            int opNumber = StdRandom.uniform(0, 4);
+            int opNumber = StdRandom.uniform(0, 2);
             if (opNumber == 0) {
                 // addLast
                 int randVal = StdRandom.uniform(0, 100);
                 sad1.addLast(randVal);
                 sad1.addLast(randVal + 1);
-                Integer expected = randVal + 1;
-                Integer actual = sad1.removeLast();
-                assertEquals("addLast(" + randVal + ")\n" +
-                        "addLast(" + expected + ")\n" +
-                        "removeLast()", expected, actual);
-                size += 1;
+                ads1.addLast(randVal);
+                ads1.addLast(randVal + 1);
+                errMsg.append("addLast(").append(randVal).append(")\n");
+                errMsg.append("addLast(").append(randVal + 1).append(")\n");
+                errMsg.append("size()\n");
+                assertEquals(String.valueOf(errMsg), sad1.size(), ads1.size());
             } else if (opNumber == 1) {
                 // addFirst
                 int randVal = StdRandom.uniform(0, 100);
                 sad1.addFirst(randVal);
                 sad1.addFirst(randVal + 1);
-                Integer expected = randVal + 1;
-                Integer actual = sad1.removeFirst();
-                assertEquals("addFirst(" + randVal + ")\n" +
-                        "addFirst(" + expected + ")\n" +
-                        "removeFirst()", expected, actual);
-                size += 1;
-            } else if (opNumber == 2) {
-                int randVal = StdRandom.uniform(0, 100);
-                sad1.addFirst(randVal);
-                sad1.addLast(randVal + 1);
-                sad2.addFirst(randVal);
-                sad2.addLast(randVal + 1);
-                size += 2;
-                assertEquals("addFirst(" + randVal + ")\n" +
-                        "addLast(" + (randVal + 1) + ")\n" +
-                        "size()", sad1.size(), sad2.size());
-            } else if (opNumber == 3) {
-                if (size > 1) {
-                    sad1.removeFirst();
-                    sad1.removeLast();
-                    sad2.removeFirst();
-                    sad2.removeLast();
-                    size -= 2;
-                }
-                int actual = sad1.size();
-                assertEquals("removeFirst()\nremoveLast()\nsize()", sad1.size(), sad2.size());
+                ads1.addFirst(randVal);
+                ads1.addFirst(randVal + 1);
+                errMsg.append("addFirst(").append(randVal).append(")\n");
+                errMsg.append("addFirst(").append(randVal + 1).append(")\n");
+                errMsg.append("size()\n");
+                assertEquals(String.valueOf(errMsg), sad1.size(), ads1.size());
             }
         }
+
+        errMsg = new StringBuilder();
+        for (int i = 0; i < N; i++) {
+            int opNumber = StdRandom.uniform(0, 2);
+            if (opNumber == 0) {
+                if (ads1.size() > 0) {
+                    Integer sadFirst = sad1.removeFirst();
+                    Integer adsFirst = ads1.removeFirst();
+                    errMsg.append("removeFirst()\n");
+                    assertEquals(String.valueOf(errMsg), sadFirst, adsFirst);
+                }
+            } else if (opNumber == 1) {
+                if (ads1.size() > 0) {
+                    Integer sadLast = sad1.removeLast();
+                    Integer adsLast = ads1.removeLast();
+                    errMsg.append("removeLast()\n");
+                    assertEquals(String.valueOf(errMsg), sadLast, adsLast);
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        jh61b.junit.TestRunner.runTests(TestArrayDequeEC.class);
     }
 }
