@@ -188,16 +188,4 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         throw new UnsupportedOperationException();
     }
 
-    public static void main(String[] args) {
-        BSTMap<Integer, String> map = new BSTMap<>();
-        map.put(4, "d");
-        map.put(3, "c");
-        map.put(2, "b");
-        map.put(7, "g");
-        map.put(9, "i");
-        map.put(6, "f");
-
-        map.printInOrder();
-    }
-
 }
