@@ -2,13 +2,13 @@ package gitlet;
 
 // TODO: any imports you need here
 
-import java.util.Date; // TODO: You'll likely use this in this class
+import java.util.Date;
 
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
- *  @author TODO
+ *  @author David Rambo
  */
 public class Commit {
     /**
@@ -21,6 +21,35 @@ public class Commit {
 
     /** The message of this Commit. */
     private String message;
+    private Date timestamp;
+    private Commit parent;
 
     /* TODO: fill in the rest of this class. */
+
+    // TODO: Generate log message.
+
+    /* Constructor method. */
+    public Commit(String message, Commit parent) {
+        this.message = message;
+        this.parent = parent;
+        // Check whether it is initial commit, and if so, then set timestamp to 0.
+        if (this.parent == null) {
+            this.timestamp = new Date(0);
+        } else {
+            // Get current time and store it as timestamp String.
+            this.timestamp = new Date();
+        }
+    }
+
+    public String getMessage() {
+        return this.message;
+    }
+
+    public String getTimestamp() {
+        return this.timestamp.toString();
+    }
+
+    public Commit getParent() {
+        return this.parent;
+    }
 }
