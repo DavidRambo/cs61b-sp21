@@ -15,4 +15,10 @@ public class HEAD {
         Utils.writeContents(HEAD_FILE, branch);
     }
 
+    /** Reads the HEAD_FILE for the name of the currently checked out branch.
+     * In Git, this would be the name of a commit. */
+    public static String getCurrentHead() {
+        return Utils.readContentsAsString(HEAD_FILE);
+    }
+
 }
