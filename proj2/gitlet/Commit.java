@@ -2,7 +2,10 @@ package gitlet;
 
 // TODO: any imports you need here
 
+import java.io.Serializable;
 import java.util.Date;
+import java.util.HashMap;
+import java.io.File;
 
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
@@ -10,46 +13,66 @@ import java.util.Date;
  *
  *  @author David Rambo
  */
-public class Commit {
-    /**
-     * TODO: add instance variables here.
-     *
-     * List all instance variables of the Commit class here with a useful
-     * comment above them describing what that variable represents and how that
-     * variable is used. We've provided one example for `message`.
-     */
+public class Commit implements Serializable {
 
-    /** The message of this Commit. */
-    private String message;
-    private Date timestamp;
-    private Commit parent;
+    /* The message of this commit. */
+    private final String message;
+    /* Time that the commit was made. */
+    private final Date timestamp;
+    /* Previous commits relative to this one. */
+    private final Commit parentOne;  // Default parent commit.
+    private final Commit parentTwo;  // In the event of a merge, this will be non-null.
+    private final String commitID;  // This commit's hash code.
+    /* It needs to be able to tell when two blobs are different versions of the
+     * same file. To do so, I'll use a map that associates a file name with its
+     * SHA-1 hash value (i.e. its blob). */
+    private HashMap<String, String> blobs;
 
-    /* TODO: fill in the rest of this class. */
+    /* Directory that stores Commit objects. */
+    static final File COMMITS_DIR = Utils.join(Repository.GITLET_DIR, "/commits");
 
     // TODO: Generate log message.
 
-    /* Constructor method. */
-    public Commit(String message, Commit parent) {
+    /* Constructor for initial (empty) commit. */
+    public Commit() {
+        this.message = "initial commit";
+        this.parentOne = null;
+        this.parentTwo = null;
+        this.timestamp = new Date(0);
+        this.commitID = calcHash();
+        blobs = new HashMap<String, String>();
+    }
+
+    /* Constructor method for commits. */
+    public Commit(String message, Commit parentOne, Commit parentTwo) {
         this.message = message;
-        this.parent = parent;
-        // Check whether it is initial commit, and if so, then set timestamp to 0.
-        if (this.parent == null) {
-            this.timestamp = new Date(0);
-        } else {
-            // Get current time and store it as timestamp String.
-            this.timestamp = new Date();
-        }
+        this.parentOne = parentOne;
+        this.parentTwo = parentTwo;
+        this.timestamp = new Date();
+        commitID = calcHash();
+        blobs = new HashMap<String, String>();
     }
 
-    public String getMessage() {
-        return this.message;
+    /** TODO:
+     * */
+    private String calcHash() {
+        return null;
     }
 
-    public String getTimestamp() {
-        return this.timestamp.toString();
+    public String getMessage() { return this.message; }
+
+    public String getTimestamp() { return this.timestamp.toString(); }
+
+    public Commit getParentOne() { return this.parentOne; }
+
+    public Commit getParentTwo() { return this.parentTwo; }
+
+    public String getCommitID() {
+        return this.commitID;
     }
 
-    public Commit getParent() {
-        return this.parent;
+    public void writeCommit() {
+        File commitFile = Utils.join(COMMITS_DIR, this.getCommitID());
+        Utils.writeObject(commitFile, this);
     }
 }
