@@ -1,0 +1,4 @@
+The ULLMap implementation is much slower—worse than linear.
+For strings of length 12, 10,000 took 0.30 sec, and 25,000 took 1.72 sec.
+
+MyHashMap scales well (0.01 sec to 0.03 sec), though not as well as Java's own built-in implementation.
