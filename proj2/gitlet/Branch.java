@@ -9,10 +9,10 @@ public class Branch {
 
     /** Overwrite a branch's most recent commit.
      * Parameters:
-     * @master : String that names the branch to be updated.
+     * @branchName : String that names the branch to be updated.
      * @commitID : hash code of the commit to be written into the branch file.*/
-    public static void updateCommit(String master, String commitID) {
-        File branch = Utils.join(BRANCHES_DIR, master);
+    public static void updateCommit(String branchName, String commitID) {
+        File branch = Utils.join(BRANCHES_DIR, branchName);
         Utils.writeContents(branch, commitID);
     }
 

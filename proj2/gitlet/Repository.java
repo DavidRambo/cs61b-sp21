@@ -28,8 +28,8 @@ public class Repository {
 
     /* TODO: fill in the rest of this class. */
 
-    /** Init command to initialize the Gitlet version-control system in the current
-        directory. If such a system already exists, it will instead print an error message.
+    /** Initializes the Gitlet version-control system in the current directory. 
+        If such a system already exists, it will instead print an error message.
         A newly initiated .gitlet repository looks like this:
          .gitlet/
           |-commits/
@@ -42,22 +42,25 @@ public class Repository {
     public static void init() {
         /* Checks for already existing .gitlet directory. */
         if (GITLET_DIR.exists()) {
-            System.out.println("A Gitlet version-control system already exists in the current directory.");
+            System.out.println("A Gitlet version-control system already exists"
+                    + " in the current directory.");
             System.exit(0);
         }
-        // TODO: What is a UID?
         GITLET_DIR.mkdir();
         Commit.COMMITS_DIR.mkdir();
         Branch.BRANCHES_DIR.mkdir();
         Index.INDEX_DIR.mkdir();
 
-        /* Create initial commit with the empty constructor. Then save it to filesystem. */
+        /* Create HEAD file and set to point to the master branch. */
+        Utils.writeContents(HEAD.HEAD_FILE, "master");
+
+        /* Create initial commit with the empty constructor.
+         * Then save it to filesystem. */
         Commit initial = new Commit();
         initial.writeCommit();
+
         /* Create master branch with initial commit. */
         Branch.updateCommit("master", initial.getCommitID());
-        /* Set HEAD to point to the master branch. */
-        HEAD.pointToBranch("master");
     }
 
     /** TODO: Status command. */
@@ -66,9 +69,21 @@ public class Repository {
     }
 
     /** TODO: Add command.
+     *
      * Calls a method in the Index class to add files in the working directory
      * to the staging area. */
     public static void addCommand(String[] args) {}
+
+    /** TODO: Commit command. */
+    public static void commit(String[] args) {
+        // Read from Gitlet directory the head commit object and staging area
+        
+        // Clone the HEAD commit
+        // Modify its message and timestamp per user input
+        // Use the staging area in order to modify the files tracked by the new commit
+
+        // Write back any new object made or any modified objects read
+    }
 
     /** Checkout command that, depending on its arguments, will call a
      * different method. It changes the working directory either by setting it
