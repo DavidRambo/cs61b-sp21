@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.File;
+import java.util.List;
 
 import static gitlet.Utils.*;
 
@@ -37,7 +38,7 @@ public class Repository {
           |-refs/
             |-master
           |-blobs/
-          |-index/
+          |-index
           |-HEAD */
     public static void init() {
         /* Checks for already existing .gitlet directory. */
@@ -47,17 +48,23 @@ public class Repository {
             System.exit(0);
         }
         GITLET_DIR.mkdir();
+
+        // Create the directory to store commit objects.
         Commit.COMMITS_DIR.mkdir();
+
+        // Create directory to store branch files.
         Branch.BRANCHES_DIR.mkdir();
-        Index.INDEX_DIR.mkdir();
+
+        // Create the staging area
+        Index index = new Index();
+        index.save();
 
         /* Create HEAD file and set to point to the master branch. */
         Utils.writeContents(HEAD.HEAD_FILE, "master");
 
-        /* Create initial commit with the empty constructor.
-         * Then save it to filesystem. */
+        /* Create initial commit with the empty constructor and save. */
         Commit initial = new Commit();
-        initial.writeCommit();
+        initial.save();
 
         /* Create master branch with initial commit. */
         Branch.updateCommit("master", initial.getCommitID());
@@ -68,21 +75,39 @@ public class Repository {
         return "TODO";
     }
 
-    /** TODO: Add command.
-     *
-     * Calls a method in the Index class to add files in the working directory
+    /** Calls a method in Index.java to add files from the working directory
      * to the staging area. */
-    public static void addCommand(String[] args) {}
+    public static void addCommand(String[] args) {
+        if (args.length == 1) {
+            // Ensure that the file exists.
+            if (!fileExists(args[1])) {
+                System.out.println("File does not exist.");
+                System.exit(0);
+            }
+            // Load staging area
+            Index index = Index.load();
+            // Stage the file
+            File file = Utils.join(CWD, args[1]);
+            index.stageFile(args[1]);
+        } else {
+            exitMsg("Incorrect operands.");
+        }
+    }
 
-    /** TODO: Commit command. */
+    /** Commit command. 
+     *
+     * Usage: java Gitlet.commit [commit message] */
     public static void commit(String[] args) {
-        // Read from Gitlet directory the head commit object and staging area
-        
-        // Clone the HEAD commit
-        // Modify its message and timestamp per user input
-        // Use the staging area in order to modify the files tracked by the new commit
+        // Validate number of args
+        if (args.length != 1) {
+            exitMsg("Incorrect operands.");
+        }
 
-        // Write back any new object made or any modified objects read
+        // Read from Gitlet directory the head commit object.
+        String headID = Branch.getBranchHead(HEAD.getCurrentHead());
+        // Do the commit: message, parent commit, second parent commit.
+        Commit newCommit = new Commit(args[0], headID, null);
+        newCommit.save();
     }
 
     /** Checkout command that, depending on its arguments, will call a
@@ -93,7 +118,9 @@ public class Repository {
      * restore command. */
     public static void checkoutCommand(String[] args) {
         // checkout -- [file name]
-        if (args.length == 2 && args[1].equals("--")) {
+        // Note that I had first set args.length to 2, bit I think it should be 3.
+        // args[0] == checkout, args[1] == --, args[2] == [file name]
+        if (args.length == 3 && args[1].equals("--")) {
             // Get the commit ID of the HEAD.
             String headID = Branch.getBranchHead(HEAD.getCurrentHead());
             checkoutFile(headID, args[2]);
@@ -108,8 +135,7 @@ public class Repository {
         }
         // wrong number or format of arguments
         else {
-            System.out.println("Incorrect operands.");
-            System.exit(0);
+            exitMsg("Incorrect operands.");
         }
     }
 
@@ -120,5 +146,24 @@ public class Repository {
      * @param fileName name of the file to be checked out. */
     private static void checkoutFile(String commitID, String fileName) {
         // TODO
+        throw new UnsupportedOperationException();
+    }
+
+    /** Checks whether the file exists in the CWD. 
+     * @param fileName name of the file to check.
+     * */
+    private static boolean fileExists(String fileName) {
+        // Create array of all plain file names against which to check.
+        List<String> plainFiles = Utils.plainFilenamesIn(CWD);
+        // Check for file in the list.
+        if (plainFiles.contains(fileName)) {
+            return true;
+        }
+        return false;
+    }
+
+    private static void exitMsg(String message) {
+        System.out.println(message);
+        System.exit(0);
     }
 }

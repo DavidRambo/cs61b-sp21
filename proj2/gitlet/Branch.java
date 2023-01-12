@@ -2,8 +2,9 @@ package gitlet;
 
 import java.io.File;
 
-/** The Branch class handles plain files in the /refs subdirectory. These files contain
- * the names of branches in the Gitlet repository. */
+/** The Branch class handles plain files in the /refs subdirectory. These files are
+ * named after the names of branches in the Gitlet repository. They contain
+ * the commit ID of their respective HEAD (i.e. the most recent commit). */
 public class Branch {
     public static final File BRANCHES_DIR = Utils.join(Repository.GITLET_DIR, "/refs");
 
