@@ -9,7 +9,7 @@ public class Blob implements Serializable {
     // File as serialized byte array
     private final byte[] file;
     // name of the blob as SHA-1 hash of the file
-    public final String blobName;
+    private final String blobName;
 
     /** Creates a new Blob out of a file's byte array. */
     public Blob(File file) {
