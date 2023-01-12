@@ -21,10 +21,10 @@ public class Main {
                 break;
             /* Adds files to staging area. */
             case "add":
-                // TODO: handle the `add [filename]` command
+                Repository.addCommand(args);
                 break;
             case "commit":
-                // TODO: handle `commit` command
+                Repository.commit(args);
                 break;
             case "rm":
                 // TODO: handle `rm [filename]` command

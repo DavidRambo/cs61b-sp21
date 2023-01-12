@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 
 /** Index.java handles Gitlet's staging area, which tracks files that have
  * been added via Repository.addCommand().
@@ -19,7 +18,7 @@ public class Index implements Serializable {
     private HashSet<String> stagedRemovals;
 
     /** Constructor method for the staging area.
-     * This method is called by the Gitlet Repository.init method
+     * This method is called by the Gitlet Repository.init() method
      * to create an empty index file. */
     public Index() {
         stagedAdditions = new HashMap<>();
@@ -48,11 +47,11 @@ public class Index implements Serializable {
         /* 3. Check the file's current status. If unchanged from current commit,
          * do not add to the staging area.
          * If already staged and unmodified, remove from the staging area. */
-        if (headCommit.getBlobName(fileName).equals(newBlobName)) {
+        if (newBlobName.equals(headCommit.getBlobName(fileName))) {
             return;
         }
 
-        if (stagedAdditions.get(fileName).equals(newBlobName)) {
+        if (newBlobName.equals(stagedAdditions.get(fileName))) {
             stagedAdditions.remove(fileName);
             // Do I need to remove the corresponding blob from the .gitlet directory?
             return;
@@ -63,7 +62,8 @@ public class Index implements Serializable {
         stagedAdditions.put(fileName, newBlobName);
         
         /* Write the new blob to the file system. */
-        Utils.writeObject(Blob.BLOBS_DIR, newBlob);
+        // Utils.writeObject(Blob.BLOBS_DIR, newBlob);
+        newBlob.save();
 
         /* Save staging area. */
         save();

@@ -56,17 +56,22 @@ public class Commit implements Serializable {
         this.parentTwo = parentTwo;
         this.timestamp = new Date();
         this.commitID = calcHash();
-        this.blobs = new HashMap<String, String>();
+        this.blobs = new HashMap<>();
 
         // Load the staging area
         Index index = Index.load();
+        // Ensure there are changes to be committed.
+        if (index.getAdditions().isEmpty()) {
+            Repository.exitMsg("No changes added to the commit.");
+        }
+
         // Get the HashMap of those file names and their corresponding blobs.
         HashMap<String, String> stagedFiles = index.getAdditions();
         // Get the HashMap of the filenames staged for removal.
         HashSet<String> stagedRemovals = index.getRemovals();
 
         // Clone the HEAD commit
-        Commit headCommit = Commit.loadCommit(parentOne);
+        Commit headCommit = loadCommit(parentOne);
         this.blobs.putAll(headCommit.blobs);
 
         /* Map those blobs against their hash names and store, while also
@@ -89,6 +94,8 @@ public class Commit implements Serializable {
 
         // Clear the Index of its staged files.
         index.clear();
+        // And save it.
+        index.save();
     }
 
     public String getMessage() { return this.message; }
@@ -110,21 +117,26 @@ public class Commit implements Serializable {
         return Utils.sha1(data);
     }
 
+    /** Saves the Commit object to the file system as ".gitlet/commits/[commitID]". */
     public void save() {
         File commitFile = Utils.join(COMMITS_DIR, this.getCommitID());
         Utils.writeObject(commitFile, this);
     }
 
+    /** Returns a Commit object with the @param commitID as its filename.
+     * Recall that this is determined by the Commit.calcHash() method. */
     public static Commit loadCommit(String commitID) {
         // TODO: Handle short IDs (i.e. commitID < 40 characters)
         File commitFile = Utils.join(COMMITS_DIR, commitID);
         return Utils.readObject(commitFile, Commit.class);
     }
 
+    /** Returns a Commit object's blobs HashMap. */
     public HashMap<String, String> getBlobs() {
         return blobs;
     }
 
+    /** Returns the SHA-1 hash code of the blob corresponding to the @param fileName. */
     public String getBlobName(String fileName) {
         return blobs.get(fileName);
     }

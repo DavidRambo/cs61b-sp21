@@ -55,6 +55,9 @@ public class Repository {
         // Create directory to store branch files.
         Branch.BRANCHES_DIR.mkdir();
 
+        // Create directory to store blobs.
+        Blob.BLOBS_DIR.mkdir();
+
         // Create the staging area
         Index index = new Index();
         index.save();
@@ -78,29 +81,31 @@ public class Repository {
     /** Calls a method in Index.java to add files from the working directory
      * to the staging area. */
     public static void addCommand(String[] args) {
-        if (args.length == 1) {
-            // Ensure that the file exists.
-            if (!fileExists(args[1])) {
-                System.out.println("File does not exist.");
-                System.exit(0);
-            }
-            // Load staging area
-            Index index = Index.load();
-            // Stage the file
-            File file = Utils.join(CWD, args[1]);
-            index.stageFile(args[1]);
-        } else {
+        if (args.length != 2) {
             exitMsg("Incorrect operands.");
         }
+        // Ensure that the file exists.
+        if (!fileExists(args[1])) {
+            System.out.println("File does not exist.");
+            System.exit(0);
+        }
+        // Load staging area
+        Index index = Index.load();
+        // Stage the file
+        File file = Utils.join(CWD, args[1]);
+        index.stageFile(args[1]);
     }
 
     /** Commit command. 
-     *
      * Usage: java Gitlet.commit [commit message] */
     public static void commit(String[] args) {
         // Validate number of args
-        if (args.length != 1) {
+        if (args.length != 2) {
             exitMsg("Incorrect operands.");
+        }
+
+        if (args[1].isEmpty()) {
+            exitMsg("Please enter a commit message.");
         }
 
         // Read from Gitlet directory the head commit object.
@@ -108,6 +113,8 @@ public class Repository {
         // Do the commit: message, parent commit, second parent commit.
         Commit newCommit = new Commit(args[0], headID, null);
         newCommit.save();
+
+        // TODO: Update head of master of currently checked out branch.
     }
 
     /** Checkout command that, depending on its arguments, will call a
@@ -162,7 +169,7 @@ public class Repository {
         return false;
     }
 
-    private static void exitMsg(String message) {
+    public static void exitMsg(String message) {
         System.out.println(message);
         System.exit(0);
     }
