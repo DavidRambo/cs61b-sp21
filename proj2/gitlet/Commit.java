@@ -96,6 +96,9 @@ public class Commit implements Serializable {
         index.clear();
         // And save it.
         index.save();
+
+        // Update branch's head to point to this commit.
+        Branch.updateCommit(HEAD.getCurrentHead(), commitID);
     }
 
     public String getMessage() { return this.message; }
@@ -128,10 +131,13 @@ public class Commit implements Serializable {
     public static Commit loadCommit(String commitID) {
         // TODO: Handle short IDs (i.e. commitID < 40 characters)
         File commitFile = Utils.join(COMMITS_DIR, commitID);
+        if (!commitFile.exists()) {
+            Repository.exitMsg("No commit with that id exists.");
+        }
         return Utils.readObject(commitFile, Commit.class);
     }
 
-    /** Returns a Commit object's blobs HashMap. */
+    /** Returns a Commit object's HashMap of blobs. */
     public HashMap<String, String> getBlobs() {
         return blobs;
     }
@@ -139,5 +145,10 @@ public class Commit implements Serializable {
     /** Returns the SHA-1 hash code of the blob corresponding to the @param fileName. */
     public String getBlobName(String fileName) {
         return blobs.get(fileName);
+    }
+
+    /** Takes the name of a file and returns the contents of that file as a String. */
+    public String getCommittedFileContents(String fileName) {
+        return Blob.readBlobAsString(getBlobName(fileName));
     }
 }

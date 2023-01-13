@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.File;
+import java.util.List;
 
 /** The Branch class handles plain files in the /refs subdirectory. These files are
  * named after the names of branches in the Gitlet repository. They contain

@@ -34,9 +34,15 @@ public class HEAD {
     }
 
     /** Reads the HEAD_FILE for the name of the currently checked out branch.
-     * In Git, this would be the name of a commit. */
+     * This can then be used to reference the file with that name in .gitlet/refs/[branch name]
+     * in order to get the commitID of its HEAD. */
     public static String getCurrentHead() {
         return Utils.readContentsAsString(HEAD_FILE);
+    }
+
+    /** Returns the commit ID of the HEAD. */
+    public static String getHeadID() {
+        return Utils.readContentsAsString(Utils.join(Branch.BRANCHES_DIR, HEAD.getCurrentHead()));
     }
 
 }

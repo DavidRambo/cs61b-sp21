@@ -42,7 +42,7 @@ public class Main {
                 // TODO: handle `status` command
                 break;
             case "checkout":
-                // TODO: handle `checkout [branch name]` command
+                Repository.checkoutCommand(args);
                 break;
             case "branch":
                 // TODO: handle `branch &opt [branch name]` command

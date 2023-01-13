@@ -1,7 +1,9 @@
 package gitlet;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static gitlet.Utils.*;
 
@@ -113,14 +115,11 @@ public class Repository {
         // Do the commit: message, parent commit, second parent commit.
         Commit newCommit = new Commit(args[0], headID, null);
         newCommit.save();
-
-        // TODO: Update head of master of currently checked out branch.
     }
 
-    /** Checkout command that, depending on its arguments, will call a
-     * different method. It changes the working directory either by setting it
-     * to the designated branch or by overwriting a file with one belonging
-     * to another commit.
+    /** Checkout command that, depending on its arguments, will call a different
+     * method. It changes the working directory either by setting it to the
+     * designated branch or by overwriting a file with one belonging to another commit.
      * Passing `-- [file name]` to it serves as a kind of analogue to git's
      * restore command. */
     public static void checkoutCommand(String[] args) {
@@ -134,10 +133,69 @@ public class Repository {
         }
         // checkout [commit id] -- [file name]
         else if (args.length == 4 && args[2].equals("--")) {
+            // Ensure commitID exists
+
             checkoutFile(args[1], args[3]);
         }
         // checkout [branch name]
         else if (args.length == 2) {
+            // Is the branch already checked out?
+            if (args[1].equals(HEAD.getCurrentHead())) {
+                exitMsg("No need to check out the current branch.");
+            }
+
+            // Does the branch not exist?
+            List<String> branches = Utils.plainFilenamesIn(Branch.BRANCHES_DIR);
+            if (!branches.contains(args[1])) {
+                exitMsg("No such branch exists.");
+            }
+
+            /* Is there an untracked working file that would be overwritten? */
+            // Create a list of the names of files in the working directory.
+            List<String> workingFiles = Utils.plainFilenamesIn(CWD);
+            // Load the current commit in order to access its HashMap of blobs.
+            Commit headCommit = Commit.loadCommit(HEAD.getHeadID());
+
+            for (String filename : workingFiles) {
+                if (headCommit.getBlobName(filename) == null) {
+                    exitMsg("There is an untracked file in the way; delete it, or add and commit it first.");
+                }
+                // File is tracked by current commit, so compare contents.
+                String committedContents = headCommit.getCommittedFileContents(filename);
+                String workingContents = Utils.readContentsAsString(Utils.join(CWD, filename));
+                if (!committedContents.equals(workingContents)) {
+                    exitMsg("There is an untracked file in the way; delete it, or add and commit it first.");
+                }
+            }
+
+            /* Takes all files in the commit at the head of the given branch, and puts them in
+             the working directory, overwriting the versions of the files that are already there
+             if they exist. Any files that are tracked in the current branch but are not
+             present in the checked-out branch are deleted. The staging area is cleared. */
+            Commit checkoutCommit = Commit.loadCommit(Branch.getBranchHead(args[1]));
+            HashMap<String, String> checkoutBlobs = checkoutCommit.getBlobs();
+            /* Iterate over the current commit's tracked files. If they are not also tracked by checkout-commit,
+            then delete from the working directory. */
+            HashMap<String, String> currentBlobs = headCommit.getBlobs();
+            for (Map.Entry<String, String> entry : currentBlobs.entrySet()) {
+                String currentBranchFileName = entry.getKey();
+                if (!checkoutBlobs.containsKey(currentBranchFileName)) {
+                    // Not tracked by the checked-out branch, so delete from working directory.
+                    Utils.join(CWD, currentBranchFileName).delete();
+                }
+            }
+
+            /* Iterate over the checked-out branch blobs and write them to the working directory. */
+            for (Map.Entry<String, String> entry : checkoutBlobs.entrySet()) {
+                byte[] contents = Blob.readBlob(entry.getValue());
+                Utils.writeContents(Utils.join(CWD, entry.getKey()), (Object) contents);
+            }
+
+            // Clear staging area
+            Index index = Index.load();
+            index.clear();
+
+            // Update HEAD to reference the now checked out branch.
             HEAD.pointToBranch(args[1]);
         }
         // wrong number or format of arguments
@@ -152,8 +210,20 @@ public class Repository {
      * @param commitID ID of the commit with the requested file.
      * @param fileName name of the file to be checked out. */
     private static void checkoutFile(String commitID, String fileName) {
-        // TODO
-        throw new UnsupportedOperationException();
+        // Load the specified commit.
+        Commit commit = Commit.loadCommit(commitID);
+        if (commit == null) {
+            exitMsg("No commit with that id exists.");
+        }
+        // Find blob id.
+        String blobName = commit.getBlobName(fileName);
+        if (blobName == null) {
+            exitMsg("File does not exist in that commit.");
+        }
+        // Load the blob.
+        byte[] contents = Blob.readBlob(blobName);
+        // Write to file in working directory.
+        Utils.writeContents(Utils.join(CWD, fileName), (Object) contents);
     }
 
     /** Checks whether the file exists in the CWD. 
