@@ -1,0 +1,18 @@
+# Status with two adds
+I setup.inc
+> status
+=== Brancnhes ===
+*master
+
+=== Staged Files ===
+f.txt
+g.txt
+
+=== Removed Files ===
+
+=== Modifications Not Staged For Commit ===
+
+=== Untracked Files ===
+
+<<<
+

@@ -1,0 +1,16 @@
+# Initialize and add two files
+> init
+<<<
++ a.txt ex.txt
++ b.text wug.txt
+> add a.txt
+<<<
+> commit "Added a.txt"
+<<<
+> commit "Trying to commit nothing"
+No changes added to the commit.
+<<<
+> add b.text
+<<<
+> commit "Added b.txt"
+<<<
