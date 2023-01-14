@@ -139,14 +139,15 @@ public class Repository {
         }
         // checkout [branch name]
         else if (args.length == 2) {
+            String checkoutID = args[1];
             // Is the branch already checked out?
-            if (args[1].equals(HEAD.getCurrentHead())) {
+            if (checkoutID.equals(HEAD.getCurrentHead())) {
                 exitMsg("No need to check out the current branch.");
             }
 
             // Does the branch not exist?
             List<String> branches = Utils.plainFilenamesIn(Branch.BRANCHES_DIR);
-            if (!branches.contains(args[1])) {
+            if (!branches.contains(checkoutID)) {
                 exitMsg("No such branch exists.");
             }
 
@@ -172,10 +173,10 @@ public class Repository {
              the working directory, overwriting the versions of the files that are already there
              if they exist. Any files that are tracked in the current branch but are not
              present in the checked-out branch are deleted. The staging area is cleared. */
-            Commit checkoutCommit = Commit.loadCommit(Branch.getBranchHead(args[1]));
+            Commit checkoutCommit = Commit.loadCommit(Branch.getBranchHead(checkoutID));
             HashMap<String, String> checkoutBlobs = checkoutCommit.getBlobs();
-            /* Iterate over the current commit's tracked files. If they are not also tracked by checkout-commit,
-            then delete from the working directory. */
+            /* Iterate over the current commit's tracked files. If they are not also
+             tracked by checkout-commit, then delete from the working directory. */
             HashMap<String, String> currentBlobs = headCommit.getBlobs();
             for (Map.Entry<String, String> entry : currentBlobs.entrySet()) {
                 String currentBranchFileName = entry.getKey();
@@ -186,9 +187,17 @@ public class Repository {
             }
 
             /* Iterate over the checked-out branch blobs and write them to the working directory. */
-            for (Map.Entry<String, String> entry : checkoutBlobs.entrySet()) {
-                byte[] contents = Blob.readBlob(entry.getValue());
-                Utils.writeContents(Utils.join(CWD, entry.getKey()), (Object) contents);
+//            for (Map.Entry<String, String> entry : checkoutBlobs.entrySet()) {
+//                String contents = Blob.readBlobAsString(entry.getValue());
+//                Utils.writeContents(Utils.join(CWD, entry.getKey()), contents);
+//                byte[] contents = Blob.readBlob(entry.getValue());
+//                Utils.writeContents(Utils.join(CWD, entry.getKey()), (Object) contents);
+//            }
+            for (String fileName : checkoutBlobs.keySet()) {
+                byte[] contents = Blob.readBlob(fileName);
+                Utils.writeContents(Utils.join(CWD, fileName), (Object) contents);
+//                String contents = Blob.readBlobAsString(fileName);
+//                Utils.writeContents(Utils.join(CWD, fileName, contents));
             }
 
             // Clear staging area
@@ -196,7 +205,7 @@ public class Repository {
             index.clear();
 
             // Update HEAD to reference the now checked out branch.
-            HEAD.pointToBranch(args[1]);
+            HEAD.pointToBranch(checkoutID);
         }
         // wrong number or format of arguments
         else {
@@ -221,10 +230,14 @@ public class Repository {
             exitMsg("File does not exist in that commit.");
         }
         // Load the blob.
-        byte[] contents = Blob.readBlob(blobName);
+//        String contents = Blob.readBlobAsString(blobName);
         // Write to file in working directory.
+//        Utils.writeContents(Utils.join(CWD, fileName), contents);
+        byte[] contents = Blob.readBlob(blobName);
         Utils.writeContents(Utils.join(CWD, fileName), (Object) contents);
     }
+
+    /** Prints a log to the terminal. */
 
     /** Checks whether the file exists in the CWD. 
      * @param fileName name of the file to check.
