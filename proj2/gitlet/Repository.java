@@ -194,15 +194,17 @@ public class Repository {
 //                Utils.writeContents(Utils.join(CWD, entry.getKey()), (Object) contents);
 //            }
             for (String fileName : checkoutBlobs.keySet()) {
-                byte[] contents = Blob.readBlob(fileName);
-                Utils.writeContents(Utils.join(CWD, fileName), (Object) contents);
-//                String contents = Blob.readBlobAsString(fileName);
-//                Utils.writeContents(Utils.join(CWD, fileName, contents));
+//                byte[] contents = Blob.readBlob(fileName);
+//                Utils.writeContents(Utils.join(CWD, fileName), (Object) contents);
+                String blobName = checkoutCommit.getBlobName(fileName);
+                String contents = Blob.getContents(blobName);
+                Utils.writeContents(Utils.join(CWD, fileName), contents);
             }
 
             // Clear staging area
             Index index = Index.load();
             index.clear();
+            index.save();
 
             // Update HEAD to reference the now checked out branch.
             HEAD.pointToBranch(checkoutID);
@@ -230,14 +232,23 @@ public class Repository {
             exitMsg("File does not exist in that commit.");
         }
         // Load the blob.
-//        String contents = Blob.readBlobAsString(blobName);
+        Blob blobObject = Blob.loadBlob(blobName);
+//        String contents = Blob.getContents(blobName);
+        String contents = blobObject.getContents();
         // Write to file in working directory.
-//        Utils.writeContents(Utils.join(CWD, fileName), contents);
-        byte[] contents = Blob.readBlob(blobName);
-        Utils.writeContents(Utils.join(CWD, fileName), (Object) contents);
+        Utils.writeContents(Utils.join(CWD, fileName), contents);
     }
 
     /** Prints a log to the terminal. */
+    public static void logCommand() {
+        // Get head commit of current branch
+        String commitID = HEAD.getHeadID();
+        while (commitID != null) {
+            Commit commit = Commit.loadCommit(commitID);
+            System.out.println(commit);
+            commitID = commit.getParentID();
+        }
+    }
 
     /** Checks whether the file exists in the CWD. 
      * @param fileName name of the file to check.

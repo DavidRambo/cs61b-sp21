@@ -30,7 +30,7 @@ public class Main {
                 // TODO: handle `rm [filename]` command
                 break;
             case "log":
-                // TODO: handle `log` command
+                Repository.logCommand();
                 break;
             case "global-log":
                 // TODO: handle `global-log` command

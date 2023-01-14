@@ -7,14 +7,14 @@ public class Blob implements Serializable {
     /* Directory in which to store blobs. */
     public static final File BLOBS_DIR = Utils.join(Repository.GITLET_DIR, "/blobs");
     // file contents in byte[] array
-    private final byte[] contents;
+    private final String contents;
     // name of the blob as SHA-1 hash of the file
     private final String blobName;
 
     /** Creates a new Blob out of a file's byte array. */
     public Blob(File file) {
         // Store file as serialized byte array
-        this.contents = Utils.readContents(file);
+        this.contents = Utils.readContentsAsString(file);
         // Calculate hash for ID.
         this.blobName = Utils.sha1((Object) contents);
     }
@@ -31,16 +31,19 @@ public class Blob implements Serializable {
         Utils.writeContents(blobFile, (Object) this.contents);
     }
 
-    /** Reads the contents of a blob in its serialized byte array format.
-     * @param blobName name of the blob file to load. */
-    public static byte[] readBlob(String blobName) {
+    public static Blob loadBlob(String blobName) {
         File blobFile = Utils.join(BLOBS_DIR, blobName);
-        return Utils.readContents(blobFile);
+        return Utils.readObject(blobFile, Blob.class);
     }
 
-    /** Returns the contents of the blob in String format. */
-    public static String readBlobAsString(String blobName) {
+    public String getContents() {
+        return this.contents;
+    }
+
+    /** Returns the String contents of the blob. */
+    public static String getContents(String blobName) {
         File blobFile = Utils.join(BLOBS_DIR, blobName);
-        return Utils.readContentsAsString(blobFile);
+        Blob blob = Utils.readObject(blobFile, Blob.class);
+        return blob.contents;
     }
 }

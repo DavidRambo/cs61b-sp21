@@ -1,14 +1,12 @@
 package gitlet;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.ObjectOutputStream;
 
 /** Represents a gitlet commit object.
  * The empty constructor creates the initial commit when initializing
@@ -33,8 +31,6 @@ public class Commit implements Serializable {
 
     /* Directory that stores Commit objects. */
     static final File COMMITS_DIR = Utils.join(Repository.GITLET_DIR, "/commits");
-
-    // TODO: Generate log message.
 
     /** Constructs the initial (empty) commit. */
     public Commit() {
@@ -105,6 +101,10 @@ public class Commit implements Serializable {
 
     public String getTimestamp() { return this.timestamp.toString(); }
 
+    public String getParentID() {
+        return parentOne;
+    }
+
     public String getCommitID() {
         return this.commitID;
     }
@@ -130,6 +130,7 @@ public class Commit implements Serializable {
      * Recall that this is determined by the Commit.calcHash() method. */
     public static Commit loadCommit(String commitID) {
         // TODO: Handle short IDs (i.e. commitID < 40 characters)
+
         File commitFile = Utils.join(COMMITS_DIR, commitID);
         if (!commitFile.exists()) {
             Repository.exitMsg("No commit with that id exists.");
@@ -149,6 +150,14 @@ public class Commit implements Serializable {
 
     /** Takes the name of a file and returns the contents of that file as a String. */
     public String getCommittedFileContents(String fileName) {
-        return Blob.readBlobAsString(getBlobName(fileName));
+        return Blob.getContents(getBlobName(fileName));
+    }
+
+    public String toString() {
+        String spacer = "===\n";
+        String name = String.format("commit %s", this.getCommitID());
+        String date = "\nDate: " + this.getTimestamp() + "\n";
+        String message = this.getMessage() + "\n";
+        return spacer + name + date + message;
     }
 }
