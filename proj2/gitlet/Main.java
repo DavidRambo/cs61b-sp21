@@ -13,12 +13,22 @@ public class Main {
         String firstArg = args[0];
         switch(firstArg) {
             case "init":
-                // TODO: handle the `init` command
+                /* Check whether .gitlet directory already exists. */
+                if (Repository.GITLET_DIR.exists()) {
+                    exitMessage("A Gitlet version-control system already exists in the current directory.");
+                }
+                Repository.init();
                 break;
             case "add":
                 // TODO: handle the `add [filename]` command
                 break;
             // TODO: FILL THE REST IN
         }
+    }
+
+    /** Template for handling errors. */
+    private static void exitMessage(String message) {
+        System.out.println(message);
+        System.exit(0);
     }
 }
