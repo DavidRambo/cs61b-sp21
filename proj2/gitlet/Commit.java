@@ -1,16 +1,18 @@
 package gitlet;
 
-// TODO: any imports you need here
+import java.io.File;
 import java.util.HashMap;
 import java.util.Date;
+import java.io.Serializable;
 
 /** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
+ * The snapshot of the working directory is recorded as a HashMap. Its key is a
+ * String of the filename, and its value is a String of the corresponding blob's
+ * filename.
  *
- *  @author TODO
+ *  @author David Rambo
  */
-public class Commit {
+public class Commit implements Serializable {
     /**
      * List all instance variables of the Commit class here with a useful
      * comment above them describing what that variable represents and how that
@@ -54,8 +56,6 @@ public class Commit {
         this.timestamp = new Date();
         this.commitID = calcHash();
 
-        // Clone parent commit's blobs.
-        blobs.putAll(getBlobs(firstParentID));
     }
 
     /** Calculates the sha-1 hash from the commit's message and timestamp.
@@ -72,8 +72,13 @@ public class Commit {
 
     /** Returns the HashMap of blobs belonging to the commit with the provided
      * commit ID. */
-    public HashMap<String, String> getBlobs(String commitID) {
-        Commit commit = Utils.readObject(COMMITS_DIR, commitID);
+    public static HashMap<String, String> getBlobs(String commitID) {
+        File file = Utils.join(Repository.COMMITS_DIR, commitID);
+        Commit commit = Utils.readObject(file, Commit.class);
         return commit.blobs;
+    }
+    
+    public String getID() {
+        return this.commitID;
     }
 }

@@ -2,19 +2,20 @@ package gitlet;
 
 import java.io.File;
 import java.util.HashMap;
-import jlava.util.HashSet;
+import java.util.HashSet;
+import java.io.Serializable;
 
 /** Handles Gitlet's staging area with a HashMap of filenames and their blob
  * objects (staged for addition) and a HashSet of filenames (staged for removal).
  */
-public class Index {
+public class Index implements Serializable {
     // <filename, blobID> files staged for addition
     HashMap<String, String> additions;
     HashSet<String> removals;
 
     /** Constructor method for the Index class. */
     public Index() {
-        additions = new HashMap<>()()
+        additions = new HashMap<>();
         removals = new HashSet<>();
     }
 
@@ -22,7 +23,7 @@ public class Index {
         return additions;
     }
 
-    public HashMap<String, String> getRemovals() {
+    public HashSet<String> getRemovals() {
         return removals;
     }
 

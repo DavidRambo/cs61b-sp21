@@ -58,7 +58,7 @@ public class Repository {
      * |–refs/
      *   |–branches
      * */
-    public static void initCommand() {
+    public static void init() {
         /* Create directory structure. */
         GITLET_DIR.mkdir();
         BLOBS_DIR.mkdir();
@@ -94,12 +94,11 @@ public class Repository {
         // Create a fresh commit object.
         Commit commit = new Commit(parentID, null, message);
         // Clone parent commit's blobs.
-        blobs.putAll(getBlobs(firstParentID));
     }
 
     /** Returns the name of the currently checked out branch. */
     public static String getCurrentBranch() {
-        return Util.readContentsAsString(HEAD);
+        return Utils.readContentsAsString(HEAD);
     }
 
     /** Returns the commit ID of the current head. */
@@ -110,6 +109,6 @@ public class Repository {
 
     /** Overwrites the named branch file with the newest commit ID. */
     public static void updateBranchHead(String branchName, String commitID) {
-        throw new UnsupportedArgumentException();
+        return;
     }
 }
