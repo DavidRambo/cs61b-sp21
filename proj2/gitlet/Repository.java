@@ -1,6 +1,8 @@
 package gitlet;
 
 import java.io.File;
+import java.util.HashMap;
+
 import static gitlet.Utils.*;
 
 // TODO: any imports you need here
@@ -12,14 +14,6 @@ import static gitlet.Utils.*;
  *  @author TODO
  */
 public class Repository {
-    /**
-     * TODO: add instance variables here.
-     *
-     * List all instance variables of the Repository class here with a useful
-     * comment above them describing what that variable represents and how that
-     * variable is used. We've provided two examples for you.
-     */
-
     /** The current working directory. */
     public static final File CWD = new File(System.getProperty("user.dir"));
     /** The .gitlet directory. */
@@ -32,7 +26,7 @@ public class Repository {
     public static final File BRANCHES = join(GITLET_DIR, "/refs");
     /** The staging area file. */
     public static final File INDEX = join(GITLET_DIR, "index");
-    /** The file that stores the currently checked out commit. */
+    /** The file that stores the currently checked out branch name. */
     public static final File HEAD = join(GITLET_DIR, "HEAD");
 
     /* TODO: fill in the rest of this class. */
@@ -78,8 +72,6 @@ public class Repository {
         /* Create the file for the master branch and enter initial commit's ID. */
         String currentBranch = getCurrentBranch();
         updateBranchHead(currentBranch, commit.getID());
-//        File branch = Utils.join(BRANCHES, currentBranch);
-//        Utils.writeContents(branch, commit.getID());
     }
 
     /** Adds file to the staging area.
@@ -93,12 +85,21 @@ public class Repository {
         if (!file.exists()) {
             Main.exitMessage("File does not exist.");
         }
-        /* Create blob from file. */
-        Blob blob = new Blob(Utils.readContentsAsString(file));
         // Load staging area.
         Index index = Index.load();
-        // Check whether file is unchanged since current commit.
 
+        /* Create blob from file. */
+        Blob blob = new Blob(Utils.readContentsAsString(file));
+        // Load current commit in order to check for changes.
+        Commit commit = Commit.load(getCurrentHead());
+        HashMap<String, String> currentBlobs = commit.getBlobs();
+        // Check whether file is unchanged since current commit.
+        if (currentBlobs.containsKey(blob.getID())) {
+            // Remove from staging area if there.
+            if (index.getAdditions().containsKey(filename)) {
+                index.getAdditions().remove(filename);
+            }
+        }
         // Stage file
         index.stage(file, blob.getID());
     }

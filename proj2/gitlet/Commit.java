@@ -19,23 +19,23 @@ public class Commit implements Serializable {
      * variable is used. We've provided one example for `message`.
      */
     /** Map of blobs: <filename, blobID> */
-    HashMap<String, String> blobs;
+    private HashMap<> blobs;
     /** This commit's hash ID. */
-    String commitID;
+    private final String commitID;
     /** Parent commit ID. This is the default one for commits. */
-    String firstParentID;
+    private final String firstParentID;
     /** Second parent commit, in the event of a merge. */
-    String secondParentID;
+    private final String secondParentID;
     /** The message of this Commit. */
-    private String message;
+    private final String message;
     /** Date of the commit. */
-    private Date timestamp;
+    private final Date timestamp;
 
     /* TODO: fill in the rest of this class. */
 
     /** Constructor method for the initial (empty) commit. */
     public Commit() {
-        blobs = new HashMap<>();
+        blobs = new HashMap<String, String>();
         firstParentID = null;
         secondParentID = null;
         message = "initial commit";
@@ -45,8 +45,8 @@ public class Commit implements Serializable {
 
     /** Constructor for Commit objects. 
      * @param message Message describing the commit's changes.
-     * @param firstParentID ID of the preceding commit.
-     * @param secondParentID ID of a second commit when merging.
+     * @param firstParent ID of the preceding commit.
+     * @param secondParent ID of a second commit when merging.
      * */
     public Commit(String firstParent, String secondParent, String message) {
         this.firstParentID = firstParent;
@@ -70,12 +70,18 @@ public class Commit implements Serializable {
         Utils.writeObject(commitFile, this);
     }
 
+    /** Loads a commit object from the file system. */
+    public static Commit load(String commitID) {
+        File file = Utils.join(Repository.COMMITS_DIR, commitID);
+        return Utils.readObject(file, Commit.class);
+    }
+
     /** Returns the HashMap of blobs belonging to the commit with the provided
      * commit ID. */
     public static HashMap<String, String> getBlobs(String commitID) {
         File file = Utils.join(Repository.COMMITS_DIR, commitID);
         Commit commit = Utils.readObject(file, Commit.class);
-        return commit.blobs;
+        return commit.getBlobs();
     }
 
     /** Returns blobs HashMap. */

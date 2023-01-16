@@ -20,7 +20,10 @@ public class Main {
                 Repository.init();
                 break;
             case "add":
-                // TODO: handle the `add [filename]` command
+                if (args.length > 2) {
+                    exitMessage("Incorrect operands.");
+                }
+                Repository.add(args[1]);
                 break;
             // TODO: FILL THE REST IN
         }

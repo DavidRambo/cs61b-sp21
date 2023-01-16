@@ -15,8 +15,8 @@ public class Index implements Serializable {
 
     /** Constructor method for the Index class. */
     public Index() {
-        additions = new HashMap<>();
-        removals = new HashSet<>();
+        additions = new HashMap<String, String>();
+        removals = new HashSet<String>();
     }
 
     public HashMap<String, String> getAdditions() {
