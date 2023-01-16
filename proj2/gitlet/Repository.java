@@ -73,18 +73,34 @@ public class Repository {
         Commit commit = new Commit();
 
         /* Create the HEAD file and write "master" to it. */
-        Utils.writeContents(HEAD, "master");
-        
+        updateHead("master");
+
         /* Create the file for the master branch and enter initial commit's ID. */
         String currentBranch = getCurrentBranch();
-        File branch = Utils.join(BRANCHES, currentBranch);
-        Utils.writeContents(branch, commit.getID());
+        updateBranchHead(currentBranch, commit.getID());
+//        File branch = Utils.join(BRANCHES, currentBranch);
+//        Utils.writeContents(branch, commit.getID());
     }
 
-    /** Adds file to the staging area. */
+    /** Adds file to the staging area.
+     * If the current working version of the file is identical to the version in
+     * the current commit, do not stage it to be added, and remove it from the
+     * staging area if it is already there (as can happen when a file is changed,
+     * added, and then changed back to it’s original version). The file will no longer
+     * be staged for removal (see gitlet rm), if it was at the time of the command. */
     public static void add(String filename) {
-        // Handle 
+        File file = Utils.join(CWD, filename);
+        if (!file.exists()) {
+            Main.exitMessage("File does not exist.");
+        }
+        /* Create blob from file. */
+        Blob blob = new Blob(Utils.readContentsAsString(file));
         // Load staging area.
+        Index index = Index.load();
+        // Check whether file is unchanged since current commit.
+
+        // Stage file
+        index.stage(file, blob.getID());
     }
 
     /** Commit command. */
@@ -101,6 +117,11 @@ public class Repository {
         return Utils.readContentsAsString(HEAD);
     }
 
+    /** Records the name of the currently checked out branch. */
+    public static void updateHead(String branchName) {
+        Utils.writeContents(HEAD, branchName);
+    }
+
     /** Returns the commit ID of the current head. */
     public static String getCurrentHead() {
         String currentBranch = getCurrentBranch();
@@ -109,6 +130,7 @@ public class Repository {
 
     /** Overwrites the named branch file with the newest commit ID. */
     public static void updateBranchHead(String branchName, String commitID) {
-        return;
+        File branch = Utils.join(BRANCHES, branchName);
+        Utils.writeContents(branch, commitID);
     }
 }

@@ -27,7 +27,7 @@ public class Main {
     }
 
     /** Template for handling errors. */
-    private static void exitMessage(String message) {
+    public static void exitMessage(String message) {
         System.out.println(message);
         System.exit(0);
     }

@@ -77,6 +77,11 @@ public class Commit implements Serializable {
         Commit commit = Utils.readObject(file, Commit.class);
         return commit.blobs;
     }
+
+    /** Returns blobs HashMap. */
+    public HashMap<String, String> getBlobs() {
+        return this.blobs;
+    }
     
     public String getID() {
         return this.commitID;

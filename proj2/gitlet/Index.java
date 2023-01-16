@@ -27,9 +27,21 @@ public class Index implements Serializable {
         return removals;
     }
 
+    /** Stages file for addition.
+     * @param file the file to be added
+     * */
+    public void stage(File file, String blobID) {
+        throw new UnsupportedOperationException();
+    }
+
     /** Writes the Index object to the file system. */
     public void save() {
         Utils.writeObject(Repository.INDEX, this);
+    }
+
+    /** Loads the staging area. */
+    public static Index load() {
+        return Utils.readObject(Repository.INDEX, Index.class);
     }
 
     /** Clears the staging area. */
