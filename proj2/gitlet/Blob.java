@@ -20,4 +20,8 @@ public class Blob implements Serializable {
     public String getID() {
         return this.blobID;
     }
+
+    public String getContents() {
+        return this.contents;
+    }
 }

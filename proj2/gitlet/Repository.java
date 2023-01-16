@@ -167,6 +167,14 @@ public class Repository {
         if (!commit.getBlobs().containsKey(filename)) {
             Main.exitMessage("File does not exist in that commit.");
         }
+        // Get the ID of the blob from the checked out commit.
+        String blobID = commit.getBlobs().get(filename);
+        // Load the blob.
+        File blobFile = Utils.join(BLOBS_DIR, blobID);
+        Blob blob = Utils.readObject(blobFile, Blob.class);
+        // Write to CWD
+        File checkoutFile = Utils.join(CWD, filename);
+        Utils.writeContents(checkoutFile, blob.getContents());
     }
 
     /** Checkout an entire branch.
@@ -182,7 +190,25 @@ public class Repository {
             Main.exitMessage("No need to check out the current branch.");
         }
         // Ensure no untracked files would be overwritten.
-        // Main.exitMessage("There is an untracked file in the way; delete it, or add and commit it first.");
+        Commit headCommit = Commit.load(getCurrentHead());
+        HashMap<String, String> headBlobs = headCommit.getBlobs();
+        for (String filename : untrackedFiles()) {
+            if (headBlobs.containsKey(filename)) {
+                Main.exitMessage("There is an untracked file in the way; delete it, or add and commit it first.");
+            }
+        }
+
+        // TODO: Proceed with checkout operation.
+    }
+
+    /** Prints a log to the terminal starting with the most recent commit. */
+    public static void log() {
+        String commitID = getCurrentHead();
+        while (commitID != null) {
+            Commit commit = Commit.load(commitID);
+            System.out.println(commit);
+            commitID = commit.getParentID();
+        }
     }
 
     /** Returns the name of the currently checked out branch. */

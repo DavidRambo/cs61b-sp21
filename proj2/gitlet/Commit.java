@@ -69,8 +69,8 @@ public class Commit implements Serializable {
 
     /** Save the commit object to the file system. */
     public void save() {
-        File commitFile = Utils.join(Repository.COMMITS_DIR, this.commitID);
-        Utils.writeObject(commitFile, this);
+        File file = Utils.join(Repository.COMMITS_DIR, this.commitID);
+        Utils.writeObject(file, this);
     }
 
     /** Loads a commit object from the file system. */
@@ -94,5 +94,24 @@ public class Commit implements Serializable {
     
     public String getID() {
         return this.commitID;
+    }
+
+    public String getParentID() {
+        return this.firstParentID;
+    }
+
+    public Date getTimestamp() {
+        return this.timestamp;
+    }
+
+    public String getMessage() {
+        return this.message;
+    }
+
+    public String toString() {
+        String spacer = "===\n";
+        String name = String.format("commit %s", this.getID());
+        String date = "\nDate: " + this.getTimestamp() + "\n";
+        return spacer + name + date + this.getMessage();
     }
 }

@@ -47,6 +47,12 @@ public class Main {
                 } else {
                     exitMessage("Incorrect operands.");
                 }
+            case "log":
+                if (args.length != 1) {
+                    exitMessage("Incorrect operands.");
+                }
+                Repository.log();
+                break;
             default:
                 exitMessage("No command with that name exists.");
         }
