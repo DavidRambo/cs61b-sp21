@@ -25,7 +25,15 @@ public class Main {
                 }
                 Repository.add(args[1]);
                 break;
-            // TODO: FILL THE REST IN
+            case "commit":
+                if (args.length > 2) {
+                    exitMessage("Incorrect operands.");
+                }
+                if (args.length == 1) {
+                    exitMessage("Please enter a commit message.");
+                }
+                Repository.commit(args[1]);
+                break;
         }
     }
 

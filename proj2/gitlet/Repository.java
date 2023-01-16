@@ -65,6 +65,7 @@ public class Repository {
 
         /* Create the initial commit. */
         Commit commit = new Commit();
+        commit.save();
 
         /* Create the HEAD file and write "master" to it. */
         updateHead("master");
@@ -101,16 +102,31 @@ public class Repository {
             }
         }
         // Stage file
-        index.stage(file, blob.getID());
+        index.stage(filename, blob.getID());
+        index.save();
     }
 
-    /** Commit command. */
+    /** Commit command.
+     * Saves a snapshot of tracked files in the current commit and staging area
+     * so they can be restored at a later time, creating a new commit.
+     * The Commit constructor method handles the logic. */
     public static void commit(String message) {
         // Retrieve the currently checked out branch and its head commit.
         String parentID = getCurrentHead();
-        // Create a fresh commit object.
+
+        // Check for changes to be saved.
+        Index index = Index.load();
+        if (index.getAdditions().isEmpty()) {
+            Main.exitMessage("No changes added to the commit.");
+        }
+
+        // Create a new commit object and save it.
         Commit commit = new Commit(parentID, null, message);
-        // Clone parent commit's blobs.
+        commit.save();
+
+        // Clear staging area and save it.
+        index.clear();
+        index.save();
     }
 
     /** Returns the name of the currently checked out branch. */

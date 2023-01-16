@@ -30,8 +30,8 @@ public class Index implements Serializable {
     /** Stages file for addition.
      * @param file the file to be added
      * */
-    public void stage(File file, String blobID) {
-        throw new UnsupportedOperationException();
+    public void stage(String filename, String blobID) {
+        additions.put(filename, blobID);
     }
 
     /** Writes the Index object to the file system. */

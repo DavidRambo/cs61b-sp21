@@ -13,13 +13,8 @@ import java.io.Serializable;
  *  @author David Rambo
  */
 public class Commit implements Serializable {
-    /**
-     * List all instance variables of the Commit class here with a useful
-     * comment above them describing what that variable represents and how that
-     * variable is used. We've provided one example for `message`.
-     */
     /** Map of blobs: <filename, blobID> */
-    private HashMap<> blobs;
+    private HashMap<String, String> blobs;
     /** This commit's hash ID. */
     private final String commitID;
     /** Parent commit ID. This is the default one for commits. */
@@ -31,8 +26,6 @@ public class Commit implements Serializable {
     /** Date of the commit. */
     private final Date timestamp;
 
-    /* TODO: fill in the rest of this class. */
-
     /** Constructor method for the initial (empty) commit. */
     public Commit() {
         blobs = new HashMap<String, String>();
@@ -43,7 +36,9 @@ public class Commit implements Serializable {
         commitID = calcHash();
     }
 
-    /** Constructor for Commit objects. 
+    /** Constructor for Commit objects.
+     * By default, a commit has the same file contents as its parent. Files
+     * staged for addition and removal are the updates to the commit.
      * @param message Message describing the commit's changes.
      * @param firstParent ID of the preceding commit.
      * @param secondParent ID of a second commit when merging.
@@ -56,6 +51,14 @@ public class Commit implements Serializable {
         this.timestamp = new Date();
         this.commitID = calcHash();
 
+        /* Clone parent's blobs. */
+        if (firstParentID != null) {
+            this.blobs = getBlobs(firstParentID);
+        }
+
+        /* Commit files in staging area. */
+        Index index = Index.load();
+        blobs.putAll(index.getAdditions());
     }
 
     /** Calculates the sha-1 hash from the commit's message and timestamp.
