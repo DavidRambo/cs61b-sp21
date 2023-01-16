@@ -97,13 +97,15 @@ public class Repository {
         // Check whether file is unchanged since current commit.
         if (currentBlobs.containsKey(blob.getID())) {
             // Remove from staging area if there.
-            if (index.getAdditions().containsKey(filename)) {
-                index.getAdditions().remove(filename);
-            }
+            index.getAdditions().remove(filename);
         }
         // Stage file
         index.stage(filename, blob.getID());
         index.save();
+
+        // Save blob
+        File blobFile = Utils.join(BLOBS_DIR, blob.getID());
+        Utils.writeObject(blobFile, blob);
     }
 
     /** Commit command.
@@ -127,6 +129,9 @@ public class Repository {
         // Clear staging area and save it.
         index.clear();
         index.save();
+
+        // Update branch with new commit ID
+        updateBranchHead(getCurrentBranch(), commit.getID());
     }
 
     /** Returns the name of the currently checked out branch. */
