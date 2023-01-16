@@ -1,6 +1,8 @@
 package gitlet;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Date;
 import java.io.Serializable;
@@ -111,7 +113,9 @@ public class Commit implements Serializable {
     public String toString() {
         String spacer = "===\n";
         String name = String.format("commit %s", this.getID());
-        String date = "\nDate: " + this.getTimestamp() + "\n";
+        DateFormat df = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+        String time = df.format(getTimestamp());
+        String date = "\nDate: " + time + "\n";
         return spacer + name + date + this.getMessage();
     }
 }
