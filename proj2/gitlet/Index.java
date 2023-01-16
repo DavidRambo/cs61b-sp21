@@ -28,7 +28,7 @@ public class Index implements Serializable {
     }
 
     /** Stages file for addition.
-     * @param file the file to be added
+     * @param filename the name of the file to be added
      * */
     public void stage(String filename, String blobID) {
         additions.put(filename, blobID);

@@ -34,6 +34,21 @@ public class Main {
                 }
                 Repository.commit(args[1]);
                 break;
+            case "checkout":
+                if (args.length == 3 && args[1].equals("--")) {
+                    Repository.checkoutFile(args[2]);
+                    break;
+                } else if (args.length == 4 && args[2].equals("--")) {
+                    Repository.checkoutFile(args[1], args[3]);
+                    break;
+                } else if (args.length == 2) {
+                    Repository.checkoutBranch(args[1]);
+                    break;
+                } else {
+                    exitMessage("Incorrect operands.");
+                }
+            default:
+                exitMessage("No command with that name exists.");
         }
     }
 

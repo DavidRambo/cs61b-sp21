@@ -1,7 +1,7 @@
 package gitlet;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
@@ -134,6 +134,57 @@ public class Repository {
         updateBranchHead(getCurrentBranch(), commit.getID());
     }
 
+    /* Checkout commands.
+     * There are three outcomes:
+     * 1. An entire branch is checked out.
+     * 2. A file is checked out from the HEAD.
+     * 3. A file is checked out from a specified commit.
+     * If a branch is being checked out, then it updates the HEAD file and
+     * loads the checked out branch's head commit's files from its blobs.
+     * */
+
+    /** Checkout a single file from the HEAD commit.
+     * java gitlet.Main checkout -- [file name] */
+    public static void checkoutFile(String filename) {
+        // Get commit ID of the current HEAD.
+        String commitID = getCurrentHead();
+        // Call method to checkout the file.
+        checkoutFile(commitID, filename);
+    }
+
+    /** Checkout a single file from a specified commit.
+     * java gitlet.Main checkout [commit id] -- [file name] */
+    public static void checkoutFile(String commitID, String filename) {
+        // TODO: Handle abbreviated commit IDs.
+        // Ensure a commit with that ID exists.
+        File commitFile = Utils.join(COMMITS_DIR, commitID);
+        if (!commitFile.exists()) {
+            Main.exitMessage("No commit with that id exists.");
+        }
+        // Load the Commit object.
+        Commit commit = Commit.load(commitID);
+        // Ensure file exists in that commit.
+        if (!commit.getBlobs().containsKey(filename)) {
+            Main.exitMessage("File does not exist in that commit.");
+        }
+    }
+
+    /** Checkout an entire branch.
+     * java gitlet.Main checkout [branch name] */
+    public static void checkoutBranch(String branchName) {
+        // Ensure branch exists.
+        List<String> branches = Utils.plainFilenamesIn(BRANCHES);
+        if (!branches.contains(branchName)) {
+            Main.exitMessage("No such branch exists.");
+        }
+        // Ensure not already checked out.
+        if (branchName.equals(getCurrentBranch())) {
+            Main.exitMessage("No need to check out the current branch.");
+        }
+        // Ensure no untracked files would be overwritten.
+        // Main.exitMessage("There is an untracked file in the way; delete it, or add and commit it first.");
+    }
+
     /** Returns the name of the currently checked out branch. */
     public static String getCurrentBranch() {
         return Utils.readContentsAsString(HEAD);
@@ -154,5 +205,25 @@ public class Repository {
     public static void updateBranchHead(String branchName, String commitID) {
         File branch = Utils.join(BRANCHES, branchName);
         Utils.writeContents(branch, commitID);
+    }
+
+    /** Returns a list of untracked files in the working directory. */
+    public static LinkedList<String> untrackedFiles() {
+        // LinkedList to hold untracked files.
+        LinkedList<String> files = new LinkedList<>();
+        /* First fill it with the names of files in working directory that are
+        not referenced by the current commit. */
+        Commit currHead = Commit.load(getCurrentHead());
+        for (String filename : Objects.requireNonNull(plainFilenamesIn(CWD))) {
+            if (!currHead.getBlobs().containsKey(filename)) {
+                files.add(filename);
+            }
+        }
+
+        // Then remove names of files from the list that are in the staging area.
+        Index index = Index.load();
+        files.removeIf(filename -> index.getAdditions().containsKey(filename));
+
+        return files;
     }
 }
