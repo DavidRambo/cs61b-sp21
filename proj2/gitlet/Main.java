@@ -17,48 +17,55 @@ public class Main {
         switch(firstArg) {
             /* Creates a new Gitlet version-control system if one does not already exist. */
             case "init":
+                /* Check whether .gitlet directory already exists. */
+                if (Repository.GITLET_DIR.exists()) {
+                    exitMessage("A Gitlet version-control system already exists in the current directory.");
+                }
                 Repository.init();
                 break;
             /* Adds files to staging area. */
             case "add":
-                Repository.addCommand(args);
+                if (args.length > 2) {
+                    exitMessage("Incorrect operands.");
+                }
+                Repository.add(args[1]);
                 break;
             case "commit":
-                Repository.commit(args);
-                break;
-            case "rm":
-                // TODO: handle `rm [filename]` command
-                break;
-            case "log":
-                Repository.logCommand();
-                break;
-            case "global-log":
-                // TODO: handle `global-log` command
-                break;
-            case "find":
-                // TODO: handle `find [filename]` command
-                break;
-            case "status":
-                // TODO: handle `status` command
+                if (args.length > 2) {
+                    exitMessage("Incorrect operands.");
+                }
+                if (args.length == 1) {
+                    exitMessage("Please enter a commit message.");
+                }
+                Repository.commit(args[1]);
                 break;
             case "checkout":
-                Repository.checkoutCommand(args);
-                break;
-            case "branch":
-                // TODO: handle `branch &opt [branch name]` command
-                break;
-            case "rm-branch":
-                // TODO: handle `rm-branch` command
-                break;
-            case "reset":
-                // TODO: handle `reset &opt [filename]` command
-                break;
-            case "merge":
-                // TODO: handle `merge [commit name]` command
+                if (args.length == 3 && args[1].equals("--")) {
+                    Repository.checkoutFile(args[2]);
+                    break;
+                } else if (args.length == 4 && args[2].equals("--")) {
+                    Repository.checkoutFile(args[1], args[3]);
+                    break;
+                } else if (args.length == 2) {
+                    Repository.checkoutBranch(args[1]);
+                    break;
+                } else {
+                    exitMessage("Incorrect operands.");
+                }
+            case "log":
+                if (args.length != 1) {
+                    exitMessage("Incorrect operands.");
+                }
+                Repository.log();
                 break;
             default:
-                System.out.println("No command with that name exists.");
-                System.exit(0);
+                exitMessage("No command with that name exists.");
         }
+    }
+
+    /** Template for handling errors. */
+    public static void exitMessage(String message) {
+        System.out.println(message);
+        System.exit(0);
     }
 }

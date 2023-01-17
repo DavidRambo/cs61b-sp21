@@ -1,9 +1,7 @@
 package gitlet;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
@@ -16,255 +14,245 @@ import static gitlet.Utils.*;
  *  @author David Rambo
  */
 public class Repository {
-    /**
-     * TODO: add instance variables here.
-     *
-     * List all instance variables of the Repository class here with a useful
-     * comment above them describing what that variable represents and how that
-     * variable is used. We've provided two examples for you.
-     */
-
     /** The current working directory. */
     public static final File CWD = new File(System.getProperty("user.dir"));
     /** The .gitlet directory. */
     public static final File GITLET_DIR = join(CWD, ".gitlet");
+    /** The directory in which to store blobs. */
+    public static final File BLOBS_DIR = join(GITLET_DIR, "/blobs");
+    /** The directory in which to store commits. */
+    public static final File COMMITS_DIR = join(GITLET_DIR, "/commits");
+    /** The file that stores branch names and their heads. */
+    public static final File BRANCHES = join(GITLET_DIR, "/refs");
+    /** The staging area file. */
+    public static final File INDEX = join(GITLET_DIR, "index");
+    /** The file that stores the currently checked out branch name. */
+    public static final File HEAD = join(GITLET_DIR, "HEAD");
 
     /* TODO: fill in the rest of this class. */
 
-    /** Initializes the Gitlet version-control system in the current directory. 
-        If such a system already exists, it will instead print an error message.
-        A newly initiated .gitlet repository looks like this:
-         .gitlet/
-          |-commits/
-            |-initial commit
-          |-refs/
-            |-master
-          |-blobs/
-          |-index
-          |-HEAD */
+    /** Creates a new Gitlet version-control system in the current directory.
+     * This system will automatically start with one commit: a commit that
+     * contains no files and has the commit message initial commit (just like that,
+     * with no punctuation). It will have a single branch: master, which initially
+     * points to this initial commit, and master will be the current branch. The
+     * timestamp for this initial commit will be 00:00:00 UTC, Thursday, 1 January
+     * 1970 in whatever format you choose for dates (this is called “The (Unix) Epoch”,
+     * represented internally by the time 0.) Since the initial commit in all
+     * repositories created by Gitlet will have exactly the same content, it follows
+     * that all repositories will automatically share this commit (they will all
+     * have the same UID) and all commits in all repositories will trace back to it.
+     * .gitlet/
+     * |–HEAD
+     * |–index
+     * |–blobs/
+     *   |–blob objects
+     * |–commits/
+     *   |–commit objects
+     * |–refs/
+     *   |–branches
+     * */
     public static void init() {
-        /* Checks for already existing .gitlet directory. */
-        if (GITLET_DIR.exists()) {
-            System.out.println("A Gitlet version-control system already exists"
-                    + " in the current directory.");
-            System.exit(0);
-        }
+        /* Create directory structure. */
         GITLET_DIR.mkdir();
+        BLOBS_DIR.mkdir();
+        COMMITS_DIR.mkdir();
+        BRANCHES.mkdir();
 
-        // Create the directory to store commit objects.
-        Commit.COMMITS_DIR.mkdir();
-
-        // Create directory to store branch files.
-        Branch.BRANCHES_DIR.mkdir();
-
-        // Create directory to store blobs.
-        Blob.BLOBS_DIR.mkdir();
-
-        // Create the staging area
+        /* Create the staging area. */
         Index index = new Index();
         index.save();
 
-        /* Create HEAD file and set to point to the master branch. */
-        Utils.writeContents(HEAD.HEAD_FILE, "master");
+        /* Create the initial commit. */
+        Commit commit = new Commit();
+        commit.save();
 
-        /* Create initial commit with the empty constructor and save. */
-        Commit initial = new Commit();
-        initial.save();
+        /* Create the HEAD file and write "master" to it. */
+        updateHead("master");
 
-        /* Create master branch with initial commit. */
-        Branch.updateCommit("master", initial.getCommitID());
+        /* Create the file for the master branch and enter initial commit's ID. */
+        String currentBranch = getCurrentBranch();
+        updateBranchHead(currentBranch, commit.getID());
     }
 
-    /** TODO: Status command. */
-    public static String status(String[] args) {
-        return "TODO";
-    }
-
-    /** Calls a method in Index.java to add files from the working directory
-     * to the staging area. */
-    public static void addCommand(String[] args) {
-        if (args.length != 2) {
-            exitMsg("Incorrect operands.");
+    /** Adds file to the staging area.
+     * If the current working version of the file is identical to the version in
+     * the current commit, do not stage it to be added, and remove it from the
+     * staging area if it is already there (as can happen when a file is changed,
+     * added, and then changed back to it’s original version). The file will no longer
+     * be staged for removal (see gitlet rm), if it was at the time of the command. */
+    public static void add(String filename) {
+        File file = Utils.join(CWD, filename);
+        if (!file.exists()) {
+            Main.exitMessage("File does not exist.");
         }
-        // Ensure that the file exists.
-        if (!fileExists(args[1])) {
-            System.out.println("File does not exist.");
-            System.exit(0);
-        }
-        // Load staging area
+        // Load staging area.
         Index index = Index.load();
-        // Stage the file
-        File file = Utils.join(CWD, args[1]);
-        index.stageFile(args[1]);
+
+        /* Create blob from file. */
+        Blob blob = new Blob(Utils.readContentsAsString(file));
+        // Load current commit in order to check for changes.
+        Commit commit = Commit.load(getCurrentHead());
+        HashMap<String, String> currentBlobs = commit.getBlobs();
+        // Check whether file is unchanged since current commit.
+        if (currentBlobs.containsKey(blob.getID())) {
+            // Remove from staging area if there.
+            index.getAdditions().remove(filename);
+        }
+        // Stage file
+        index.stage(filename, blob.getID());
+        index.save();
+
+        // Save blob
+        File blobFile = Utils.join(BLOBS_DIR, blob.getID());
+        Utils.writeObject(blobFile, blob);
     }
 
-    /** Commit command. 
-     * Usage: java Gitlet.commit [commit message] */
-    public static void commit(String[] args) {
-        // Validate number of args
-        if (args.length != 2) {
-            exitMsg("Incorrect operands.");
+    /** Commit command.
+     * Saves a snapshot of tracked files in the current commit and staging area
+     * so they can be restored at a later time, creating a new commit.
+     * The Commit constructor method handles the logic. */
+    public static void commit(String message) {
+        // Retrieve the currently checked out branch and its head commit.
+        String parentID = getCurrentHead();
+
+        // Check for changes to be saved.
+        Index index = Index.load();
+        if (index.getAdditions().isEmpty()) {
+            Main.exitMessage("No changes added to the commit.");
         }
 
-        if (args[1].isEmpty()) {
-            exitMsg("Please enter a commit message.");
-        }
+        // Create a new commit object and save it.
+        Commit commit = new Commit(parentID, null, message);
+        commit.save();
 
-        // Read from Gitlet directory the head commit object.
-        String headID = Branch.getBranchHead(HEAD.getCurrentHead());
-        // Do the commit: message, parent commit, second parent commit.
-        Commit newCommit = new Commit(args[0], headID, null);
-        newCommit.save();
+        // Clear staging area and save it.
+        index.clear();
+        index.save();
+
+        // Update branch with new commit ID
+        updateBranchHead(getCurrentBranch(), commit.getID());
     }
 
-    /** Checkout command that, depending on its arguments, will call a different
-     * method. It changes the working directory either by setting it to the
-     * designated branch or by overwriting a file with one belonging to another commit.
-     * Passing `-- [file name]` to it serves as a kind of analogue to git's
-     * restore command. */
-    public static void checkoutCommand(String[] args) {
-        // checkout -- [file name]
-        // Note that I had first set args.length to 2, bit I think it should be 3.
-        // args[0] == checkout, args[1] == --, args[2] == [file name]
-        if (args.length == 3 && args[1].equals("--")) {
-            // Get the commit ID of the HEAD.
-            String headID = Branch.getBranchHead(HEAD.getCurrentHead());
-            checkoutFile(headID, args[2]);
-        }
-        // checkout [commit id] -- [file name]
-        else if (args.length == 4 && args[2].equals("--")) {
-            // Ensure commitID exists
+    /* Checkout commands.
+     * There are three outcomes:
+     * 1. A file is checked out from the HEAD.
+     * 2. A file is checked out from a specified commit.-sp21
+     * 3. An entire branch is checked out.
+     * If a branch is being checked out, then it updates the HEAD file and
+     * loads the checked out branch's head commit's files from its blobs.
+     * */
 
-            checkoutFile(args[1], args[3]);
-        }
-        // checkout [branch name]
-        else if (args.length == 2) {
-            String checkoutID = args[1];
-            // Is the branch already checked out?
-            if (checkoutID.equals(HEAD.getCurrentHead())) {
-                exitMsg("No need to check out the current branch.");
-            }
-
-            // Does the branch not exist?
-            List<String> branches = Utils.plainFilenamesIn(Branch.BRANCHES_DIR);
-            if (!branches.contains(checkoutID)) {
-                exitMsg("No such branch exists.");
-            }
-
-            /* Is there an untracked working file that would be overwritten? */
-            // Create a list of the names of files in the working directory.
-            List<String> workingFiles = Utils.plainFilenamesIn(CWD);
-            // Load the current commit in order to access its HashMap of blobs.
-            Commit headCommit = Commit.loadCommit(HEAD.getHeadID());
-
-            for (String filename : workingFiles) {
-                if (headCommit.getBlobName(filename) == null) {
-                    exitMsg("There is an untracked file in the way; delete it, or add and commit it first.");
-                }
-                // File is tracked by current commit, so compare contents.
-                String committedContents = headCommit.getCommittedFileContents(filename);
-                String workingContents = Utils.readContentsAsString(Utils.join(CWD, filename));
-                if (!committedContents.equals(workingContents)) {
-                    exitMsg("There is an untracked file in the way; delete it, or add and commit it first.");
-                }
-            }
-
-            /* Takes all files in the commit at the head of the given branch, and puts them in
-             the working directory, overwriting the versions of the files that are already there
-             if they exist. Any files that are tracked in the current branch but are not
-             present in the checked-out branch are deleted. The staging area is cleared. */
-            Commit checkoutCommit = Commit.loadCommit(Branch.getBranchHead(checkoutID));
-            HashMap<String, String> checkoutBlobs = checkoutCommit.getBlobs();
-            /* Iterate over the current commit's tracked files. If they are not also
-             tracked by checkout-commit, then delete from the working directory. */
-            HashMap<String, String> currentBlobs = headCommit.getBlobs();
-            for (Map.Entry<String, String> entry : currentBlobs.entrySet()) {
-                String currentBranchFileName = entry.getKey();
-                if (!checkoutBlobs.containsKey(currentBranchFileName)) {
-                    // Not tracked by the checked-out branch, so delete from working directory.
-                    Utils.join(CWD, currentBranchFileName).delete();
-                }
-            }
-
-            /* Iterate over the checked-out branch blobs and write them to the working directory. */
-//            for (Map.Entry<String, String> entry : checkoutBlobs.entrySet()) {
-//                String contents = Blob.readBlobAsString(entry.getValue());
-//                Utils.writeContents(Utils.join(CWD, entry.getKey()), contents);
-//                byte[] contents = Blob.readBlob(entry.getValue());
-//                Utils.writeContents(Utils.join(CWD, entry.getKey()), (Object) contents);
-//            }
-            for (String fileName : checkoutBlobs.keySet()) {
-//                byte[] contents = Blob.readBlob(fileName);
-//                Utils.writeContents(Utils.join(CWD, fileName), (Object) contents);
-                String blobName = checkoutCommit.getBlobName(fileName);
-                String contents = Blob.getContents(blobName);
-                Utils.writeContents(Utils.join(CWD, fileName), contents);
-            }
-
-            // Clear staging area
-            Index index = Index.load();
-            index.clear();
-            index.save();
-
-            // Update HEAD to reference the now checked out branch.
-            HEAD.pointToBranch(checkoutID);
-        }
-        // wrong number or format of arguments
-        else {
-            exitMsg("Incorrect operands.");
-        }
+    /** Checkout a single file from the HEAD commit.
+     * java gitlet.Main checkout -- [file name] */
+    public static void checkoutFile(String filename) {
+        // Get commit ID of the current HEAD.
+        String commitID = getCurrentHead();
+        // Call method to checkout the file.
+        checkoutFile(commitID, filename);
     }
 
-    /** Takes the version of the file with the provided fileName as it exists in the
-     * commit with the provided commitID and puts it into the working directory,
-     * overwriting the version that is already there.
-     * @param commitID ID of the commit with the requested file.
-     * @param fileName name of the file to be checked out. */
-    private static void checkoutFile(String commitID, String fileName) {
-        // Load the specified commit.
-        Commit commit = Commit.loadCommit(commitID);
-        if (commit == null) {
-            exitMsg("No commit with that id exists.");
+    /** Checkout a single file from a specified commit.
+     * java gitlet.Main checkout [commit id] -- [file name] */
+    public static void checkoutFile(String commitID, String filename) {
+        // TODO: Handle abbreviated commit IDs.
+        // Ensure a commit with that ID exists.
+        File commitFile = Utils.join(COMMITS_DIR, commitID);
+        if (!commitFile.exists()) {
+            Main.exitMessage("No commit with that id exists.");
         }
-        // Find blob id.
-        String blobName = commit.getBlobName(fileName);
-        if (blobName == null) {
-            exitMsg("File does not exist in that commit.");
+        // Load the Commit object.
+        Commit commit = Commit.load(commitID);
+        // Ensure file exists in that commit.
+        if (!commit.getBlobs().containsKey(filename)) {
+            Main.exitMessage("File does not exist in that commit.");
         }
+        // Get the ID of the blob from the checked out commit.
+        String blobID = commit.getBlobs().get(filename);
         // Load the blob.
-        Blob blobObject = Blob.loadBlob(blobName);
-//        String contents = Blob.getContents(blobName);
-        String contents = blobObject.getContents();
-        // Write to file in working directory.
-        Utils.writeContents(Utils.join(CWD, fileName), contents);
+        File blobFile = Utils.join(BLOBS_DIR, blobID);
+        Blob blob = Utils.readObject(blobFile, Blob.class);
+        // Write to CWD
+        File checkoutFile = Utils.join(CWD, filename);
+        Utils.writeContents(checkoutFile, blob.getContents());
     }
 
-    /** Prints a log to the terminal. */
-    public static void logCommand() {
-        // Get head commit of current branch
-        String commitID = HEAD.getHeadID();
+    /** Checkout an entire branch.
+     * java gitlet.Main checkout [branch name] */
+    public static void checkoutBranch(String branchName) {
+        // Ensure branch exists.
+        List<String> branches = Utils.plainFilenamesIn(BRANCHES);
+        if (!branches.contains(branchName)) {
+            Main.exitMessage("No such branch exists.");
+        }
+        // Ensure not already checked out.
+        if (branchName.equals(getCurrentBranch())) {
+            Main.exitMessage("No need to check out the current branch.");
+        }
+        // Ensure no untracked files would be overwritten.
+        Commit headCommit = Commit.load(getCurrentHead());
+        HashMap<String, String> headBlobs = headCommit.getBlobs();
+        for (String filename : untrackedFiles()) {
+            if (headBlobs.containsKey(filename)) {
+                Main.exitMessage("There is an untracked file in the way; delete it, or add and commit it first.");
+            }
+        }
+
+        // TODO: Proceed with checkout operation.
+    }
+
+    /** Prints a log to the terminal starting with the most recent commit. */
+    public static void log() {
+        StringBuilder output = new StringBuilder();
+        String commitID = getCurrentHead();
         while (commitID != null) {
-            Commit commit = Commit.loadCommit(commitID);
-            System.out.println(commit);
+            Commit commit = Commit.load(commitID);
+            output.append(commit.toString());
+            output.append("\n");
             commitID = commit.getParentID();
         }
+        System.out.println(output);
     }
 
-    /** Checks whether the file exists in the CWD. 
-     * @param fileName name of the file to check.
-     * */
-    private static boolean fileExists(String fileName) {
-        // Create array of all plain file names against which to check.
-        List<String> plainFiles = Utils.plainFilenamesIn(CWD);
-        // Check for file in the list.
-        if (plainFiles.contains(fileName)) {
-            return true;
+    /** Returns the name of the currently checked out branch. */
+    public static String getCurrentBranch() {
+        return Utils.readContentsAsString(HEAD);
+    }
+
+    /** Records the name of the currently checked out branch. */
+    public static void updateHead(String branchName) {
+        Utils.writeContents(HEAD, branchName);
+    }
+
+    /** Returns the commit ID of the current head. */
+    public static String getCurrentHead() {
+        String currentBranch = getCurrentBranch();
+        return Utils.readContentsAsString(Utils.join(BRANCHES, currentBranch));
+    }
+
+    /** Overwrites the named branch file with the newest commit ID. */
+    public static void updateBranchHead(String branchName, String commitID) {
+        File branch = Utils.join(BRANCHES, branchName);
+        Utils.writeContents(branch, commitID);
+    }
+
+    /** Returns a list of untracked files in the working directory. */
+    public static LinkedList<String> untrackedFiles() {
+        // LinkedList to hold untracked files.
+        LinkedList<String> files = new LinkedList<>();
+        /* First fill it with the names of files in working directory that are
+        not referenced by the current commit. */
+        Commit currHead = Commit.load(getCurrentHead());
+        for (String filename : Objects.requireNonNull(plainFilenamesIn(CWD))) {
+            if (!currHead.getBlobs().containsKey(filename)) {
+                files.add(filename);
+            }
         }
-        return false;
-    }
 
-    public static void exitMsg(String message) {
-        System.out.println(message);
-        System.exit(0);
+        // Then remove names of files from the list that are in the staging area.
+        Index index = Index.load();
+        files.removeIf(filename -> index.getAdditions().containsKey(filename));
+
+        return files;
     }
 }

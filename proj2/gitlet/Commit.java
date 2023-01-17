@@ -1,163 +1,124 @@
 package gitlet;
 
-import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Date;
+import java.util.Formatter;
+import java.io.Serializable;
+import java.util.Locale;
 
 /** Represents a gitlet commit object.
- * The empty constructor creates the initial commit when initializing
- * (see Repository.init()).
- * *
+ * The snapshot of the working directory is recorded as a HashMap. Its key is a
+ * String of the filename, and its value is a String of the corresponding blob's
+ * filename.
+ *
  *  @author David Rambo
  */
 public class Commit implements Serializable {
-
-    /* The message of this commit. */
-    private final String message;
-    /* Time that the commit was made. */
-    private final Date timestamp;
-    /* Previous commits relative to this one. */
-    private final String parentOne;  // Default parent commit's id.
-    private final String parentTwo;  // In the event of a merge, this will be non-null.
-    private final String commitID;  // This commit's hash code.
-    /* It needs to be able to tell when two blobs are different versions of the
-     * same file. To do so, I'll use a map that associates a file name with its
-     * SHA-1 hash value (i.e. its blobName). */
+    /** Map of blobs: <filename, blobID> */
     private HashMap<String, String> blobs;
+    /** This commit's hash ID. */
+    private final String commitID;
+    /** Parent commit ID. This is the default one for commits. */
+    private final String firstParentID;
+    /** Second parent commit, in the event of a merge. */
+    private final String secondParentID;
+    /** The message of this Commit. */
+    private final String message;
+    /** Date of the commit. */
+    private final Date timestamp;
 
-    /* Directory that stores Commit objects. */
-    static final File COMMITS_DIR = Utils.join(Repository.GITLET_DIR, "/commits");
-
-    /** Constructs the initial (empty) commit. */
+    /** Constructor method for the initial (empty) commit. */
     public Commit() {
-        this.message = "initial commit";
-        this.parentOne = null;
-        this.parentTwo = null;
-        this.timestamp = new Date(0);
-        this.commitID = calcHash();
-        this.blobs = new HashMap<String, String>();
+        blobs = new HashMap<String, String>();
+        firstParentID = null;
+        secondParentID = null;
+        message = "initial commit";
+        timestamp = new Date(0);
+        commitID = calcHash();
     }
 
-    /** Constructor method for commits.
-     * @param message : commit message.
-     * @param parentOne : SHA-1 hash code id to first parent commit.
-     * @param parentTwo : SHA-1 hash code id to second parent commit if merging. */
-    public Commit(String message, String parentOne, String parentTwo) {
+    /** Constructor for Commit objects.
+     * By default, a commit has the same file contents as its parent. Files
+     * staged for addition and removal are the updates to the commit.
+     * @param message Message describing the commit's changes.
+     * @param firstParent ID of the preceding commit.
+     * @param secondParent ID of a second commit when merging.
+     * */
+    public Commit(String firstParent, String secondParent, String message) {
+        this.firstParentID = firstParent;
+        this.secondParentID = secondParent;
         this.message = message;
-        this.parentOne = parentOne;
-        this.parentTwo = parentTwo;
+        this.blobs = new HashMap<>();
         this.timestamp = new Date();
         this.commitID = calcHash();
-        this.blobs = new HashMap<>();
 
-        // Load the staging area
+        /* Clone parent's blobs. */
+        if (firstParentID != null) {
+            this.blobs = getBlobs(firstParentID);
+        }
+
+        /* Commit files in staging area. */
         Index index = Index.load();
-        // Ensure there are changes to be committed.
-        if (index.getAdditions().isEmpty()) {
-            Repository.exitMsg("No changes added to the commit.");
-        }
-
-        // Get the HashMap of those file names and their corresponding blobs.
-        HashMap<String, String> stagedFiles = index.getAdditions();
-        // Get the HashMap of the filenames staged for removal.
-        HashSet<String> stagedRemovals = index.getRemovals();
-
-        // Clone the HEAD commit
-        Commit headCommit = loadCommit(parentOne);
-        this.blobs.putAll(headCommit.blobs);
-
-        /* Map those blobs against their hash names and store, while also
-         * writing a copy of them into the "/blobs/" subdirectory.
-         * entry.getKey() is the filename; entry.getValue() is the blob. */
-        for (Map.Entry<String, String> entry : stagedFiles.entrySet()) {
-            this.blobs.put(entry.getKey(), entry.getValue());
-            File blobFile = Utils.join(Blob.BLOBS_DIR, entry.getValue());
-            Utils.writeObject(blobFile, entry.getValue());
-        }
-
-        // Remove files.
-        for (String name : stagedRemovals) {
-            // Remove from the commit's map of blobs.
-            blobs.remove(name);
-
-            // Remove from the working directory.
-            Utils.join(Repository.CWD, name).delete();
-        }
-
-        // Clear the Index of its staged files.
-        index.clear();
-        // And save it.
-        index.save();
-
-        // Update branch's head to point to this commit.
-        Branch.updateCommit(HEAD.getCurrentHead(), commitID);
+        blobs.putAll(index.getAdditions());
     }
 
-    public String getMessage() { return this.message; }
-
-    public String getTimestamp() { return this.timestamp.toString(); }
-
-    public String getParentID() {
-        return parentOne;
+    /** Calculates the sha-1 hash from the commit's message and timestamp.
+     * This serves as its ID and also filename. */
+    private String calcHash() {
+        return Utils.sha1(message, timestamp.toString());
     }
 
-    public String getCommitID() {
+    /** Save the commit object to the file system. */
+    public void save() {
+        File file = Utils.join(Repository.COMMITS_DIR, this.commitID);
+        Utils.writeObject(file, this);
+    }
+
+    /** Loads a commit object from the file system. */
+    public static Commit load(String commitID) {
+        File file = Utils.join(Repository.COMMITS_DIR, commitID);
+        return Utils.readObject(file, Commit.class);
+    }
+
+    /** Returns the HashMap of blobs belonging to the commit with the provided
+     * commit ID. */
+    public static HashMap<String, String> getBlobs(String commitID) {
+        File file = Utils.join(Repository.COMMITS_DIR, commitID);
+        Commit commit = Utils.readObject(file, Commit.class);
+        return commit.getBlobs();
+    }
+
+    /** Returns blobs HashMap. */
+    public HashMap<String, String> getBlobs() {
+        return this.blobs;
+    }
+    
+    public String getID() {
         return this.commitID;
     }
 
-    /** Calculates the hash of the commit using the commit's message
-     * and its timestamp.
-     * */
-    private String calcHash() {
-        // Create byte array out of this Commit object, which will be passed to
-        // the Utils.sha1() method.
-        byte[] data = Utils.serialize(this);
-
-        return Utils.sha1(data);
+    public String getParentID() {
+        return this.firstParentID;
     }
 
-    /** Saves the Commit object to the file system as ".gitlet/commits/[commitID]". */
-    public void save() {
-        File commitFile = Utils.join(COMMITS_DIR, this.getCommitID());
-        Utils.writeObject(commitFile, this);
+    public Date getTimestamp() {
+        return this.timestamp;
     }
 
-    /** Returns a Commit object with the @param commitID as its filename.
-     * Recall that this is determined by the Commit.calcHash() method. */
-    public static Commit loadCommit(String commitID) {
-        // TODO: Handle short IDs (i.e. commitID < 40 characters)
-
-        File commitFile = Utils.join(COMMITS_DIR, commitID);
-        if (!commitFile.exists()) {
-            Repository.exitMsg("No commit with that id exists.");
-        }
-        return Utils.readObject(commitFile, Commit.class);
-    }
-
-    /** Returns a Commit object's HashMap of blobs. */
-    public HashMap<String, String> getBlobs() {
-        return blobs;
-    }
-
-    /** Returns the SHA-1 hash code of the blob corresponding to the @param fileName. */
-    public String getBlobName(String fileName) {
-        return blobs.get(fileName);
-    }
-
-    /** Takes the name of a file and returns the contents of that file as a String. */
-    public String getCommittedFileContents(String fileName) {
-        return Blob.getContents(getBlobName(fileName));
+    public String getMessage() {
+        return this.message;
     }
 
     public String toString() {
+        StringBuilder sb = new StringBuilder();
         String spacer = "===\n";
-        String name = String.format("commit %s", this.getCommitID());
-        String date = "\nDate: " + this.getTimestamp() + "\n";
-        String message = this.getMessage() + "\n";
-        return spacer + name + date + message;
+        String name = String.format("commit %s", this.getID());
+        DateFormat df = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy ZZZ");
+        String time = df.format(getTimestamp());
+        String date = "\nDate: " + time + "\n";
+        return spacer + name + date + this.getMessage() + "\n";
     }
 }
