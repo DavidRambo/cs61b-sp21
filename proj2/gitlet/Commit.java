@@ -5,7 +5,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Date;
+import java.util.Formatter;
 import java.io.Serializable;
+import java.util.Locale;
 
 /** Represents a gitlet commit object.
  * The snapshot of the working directory is recorded as a HashMap. Its key is a
@@ -111,9 +113,10 @@ public class Commit implements Serializable {
     }
 
     public String toString() {
+        StringBuilder sb = new StringBuilder();
         String spacer = "===\n";
         String name = String.format("commit %s", this.getID());
-        DateFormat df = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+        DateFormat df = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy ZZZ");
         String time = df.format(getTimestamp());
         String date = "\nDate: " + time + "\n";
         return spacer + name + date + this.getMessage() + "\n";
