@@ -63,6 +63,11 @@ public class Commit implements Serializable {
         /* Commit files in staging area. */
         Index index = Index.load();
         blobs.putAll(index.getAdditions());
+
+        /* Remove files staged for removal. */
+        for (String filename : index.getRemovals()) {
+            blobs.remove(filename);
+        }
     }
 
     /** Calculates the sha-1 hash from the commit's message and timestamp.

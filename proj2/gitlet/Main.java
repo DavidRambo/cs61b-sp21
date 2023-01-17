@@ -30,6 +30,12 @@ public class Main {
                 }
                 Repository.add(args[1]);
                 break;
+            case "rm" :
+                if (args.length != 2) {
+                    exitMessage("Incorrect operands.");
+                }
+                Repository.remove(args[1]);
+                break;
             case "commit":
                 if (args.length > 2) {
                     exitMessage("Incorrect operands.");

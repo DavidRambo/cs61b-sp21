@@ -108,6 +108,27 @@ public class Repository {
         Utils.writeObject(blobFile, blob);
     }
 
+    /** Unstage the file if it is currently staged for addition. If the file is
+     * tracked in the current commit, stage it for removal and remove the file from
+     * the working directory if the user has not already done so. (Does not remove
+     * if it is untracked in the current commit.) */
+    public static void remove(String filename) {
+        // Ensure file with that name exists.
+        if (!fileExists(filename)) {
+            Main.exitMessage("File by that name does not exist.");
+        }
+        // Load the staging area.
+        Index index = Index.load();
+        // Load head commit.
+        Commit headCommit = Commit.load(getCurrentHead());
+
+        if (index.isStaged(filename) || headCommit.getBlobs().containsKey(filename)) {
+            index.remove(filename);
+        } else {
+            Main.exitMessage("No reason to remove the file.");
+        }
+    }
+
     /** Commit command.
      * Saves a snapshot of tracked files in the current commit and staging area
      * so they can be restored at a later time, creating a new commit.
@@ -118,7 +139,7 @@ public class Repository {
 
         // Check for changes to be saved.
         Index index = Index.load();
-        if (index.getAdditions().isEmpty()) {
+        if (index.getAdditions().isEmpty() && index.getRemovals().isEmpty()) {
             Main.exitMessage("No changes added to the commit.");
         }
 
@@ -214,6 +235,16 @@ public class Repository {
         System.out.println(output);
     }
 
+    /** Prints out:
+     * - what branches currently exist, marking the current with an asterisk
+     * - files staged for addition
+     * - files staged for removal
+     * - modifications not staged for commit
+     * - untracked files*/
+    public static void status() {
+        throw new UnsupportedOperationException();
+    }
+
     /** Returns the name of the currently checked out branch. */
     public static String getCurrentBranch() {
         return Utils.readContentsAsString(HEAD);
@@ -255,4 +286,11 @@ public class Repository {
 
         return files;
     }
+
+    /** Checks whether the file exists in the working directory. */
+    public static boolean fileExists(String filename) {
+        File file = Utils.join(CWD, filename);
+        return file.exists();
+    }
+
 }

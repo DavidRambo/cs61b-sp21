@@ -34,6 +34,23 @@ public class Index implements Serializable {
         additions.put(filename, blobID);
     }
 
+    /** If file is currently staged, then unstages file for addition.
+     * Otherwise it stages for removal.
+      */
+    public void remove(String filename) {
+        if (isStaged(filename)) {
+            /* Remove from staging area. */
+            getAdditions().remove(filename);
+        } else {
+            /* Add to removals */
+            getRemovals().add(filename);
+            /* Remove from working directory. */
+            File file = Utils.join(Repository.CWD, filename);
+            file.delete();
+        }
+        save();
+    }
+
     /** Writes the Index object to the file system. */
     public void save() {
         Utils.writeObject(Repository.INDEX, this);
@@ -48,5 +65,10 @@ public class Index implements Serializable {
     public void clear() {
         additions.clear();
         removals.clear();
+    }
+
+    /** Checks whether the file is staged for addition. */
+    public boolean isStaged(String filename) {
+        return getAdditions().containsKey(filename);
     }
 }
