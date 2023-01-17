@@ -22,14 +22,12 @@ public class Repository {
     public static final File BLOBS_DIR = join(GITLET_DIR, "/blobs");
     /** The directory in which to store commits. */
     public static final File COMMITS_DIR = join(GITLET_DIR, "/commits");
-    /** The file that stores branch names and their heads. */
+    /** The directory that stores branch names and their heads. */
     public static final File BRANCHES = join(GITLET_DIR, "/refs");
     /** The staging area file. */
     public static final File INDEX = join(GITLET_DIR, "index");
     /** The file that stores the currently checked out branch name. */
     public static final File HEAD = join(GITLET_DIR, "HEAD");
-
-    /* TODO: fill in the rest of this class. */
 
     /** Creates a new Gitlet version-control system in the current directory.
      * This system will automatically start with one commit: a commit that
@@ -112,7 +110,7 @@ public class Repository {
      * tracked in the current commit, stage it for removal and remove the file from
      * the working directory if the user has not already done so. (Does not remove
      * if it is untracked in the current commit.) */
-    public static void remove(String filename) {
+    public static void rmCommand(String filename) {
         // Ensure file with that name exists.
         if (!fileExists(filename)) {
             Main.exitMessage("File by that name does not exist.");
@@ -229,12 +227,13 @@ public class Repository {
         Commit checkoutCommit = Commit.load(getBranchHead(branchName));
 
         // Load every file to working directory
-        for (String blobID : checkoutCommit.getBlobs().values()) {
+        for (String filename : checkoutCommit.getBlobs().keySet()) {
+            String blobID = checkoutCommit.getBlobs().get(filename);
             // Load the blob.
             File blobFile = Utils.join(BLOBS_DIR, blobID);
             Blob blob = Utils.readObject(blobFile, Blob.class);
             // Write to CWD
-            File checkoutFile = Utils.join(CWD, blobID);
+            File checkoutFile = Utils.join(CWD, filename);
             Utils.writeContents(checkoutFile, blob.getContents());
         }
 
@@ -266,6 +265,21 @@ public class Repository {
             commitID = commit.getParentID();
         }
         System.out.println(output);
+    }
+
+    /** Creates a new branch with the name provided.
+     * It sets the new branch's head to the current HEAD.
+     * It does not checkout the new branch. */
+    public static void branch(String name) {
+        // Retrieve names of extant branches
+        List<String> branches = Utils.plainFilenamesIn(BRANCHES);
+        assert branches != null;
+        if (branches.contains(name)){
+            Main.exitMessage("A branch with that name already exists.");
+        }
+
+        File newBranch = Utils.join(BRANCHES, name);
+        Utils.writeContents(newBranch, getCurrentHead());
     }
 
     /** Prints out:
