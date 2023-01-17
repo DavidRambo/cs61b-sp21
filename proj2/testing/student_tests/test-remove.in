@@ -1,0 +1,20 @@
+> init
+<<<
++ wug.txt wug.txt
+> add wug.txt
+<<<
+> commit "vers 1 of wug.txt"
+<<<
+# Check that we get the error for an unstaged, untracked file.
+> rm notwug.txt
+No reason to remove the file.
+<<<
+# Check that we can remove a file staged for addition
++ notwug.txt notwug.txt
+> add notwug.txt
+<<<
+> rm notwug.txt
+<<<
+> commit "Unnecessary commit."
+No changes added to the commit.
+<<<
