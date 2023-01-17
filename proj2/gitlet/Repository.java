@@ -199,10 +199,16 @@ public class Repository {
     }
 
     /** Checkout an entire branch.
-     * java gitlet.Main checkout [branch name] */
+     * > java gitlet.Main checkout [branch name]
+     * Takes all files at the head of the specified branch and puts them into
+     * the working directory, overwriting versions of those files already there.
+     * Sets the checked out branch to be the HEAD. Any files tracked in current
+     * branch but not by the checked out branch are deleted.
+     * Staging area is cleared.*/
     public static void checkoutBranch(String branchName) {
         // Ensure branch exists.
         List<String> branches = Utils.plainFilenamesIn(BRANCHES);
+        assert branches != null;
         if (!branches.contains(branchName)) {
             Main.exitMessage("No such branch exists.");
         }
@@ -219,7 +225,34 @@ public class Repository {
             }
         }
 
-        // TODO: Proceed with checkout operation.
+        // Load the commit to be checked out
+        Commit checkoutCommit = Commit.load(getBranchHead(branchName));
+
+        // Load every file to working directory
+        for (String blobID : checkoutCommit.getBlobs().values()) {
+            // Load the blob.
+            File blobFile = Utils.join(BLOBS_DIR, blobID);
+            Blob blob = Utils.readObject(blobFile, Blob.class);
+            // Write to CWD
+            File checkoutFile = Utils.join(CWD, blobID);
+            Utils.writeContents(checkoutFile, blob.getContents());
+        }
+
+        // Delete working files not tracked by checked out branch
+        for (String filename : headCommit.getBlobs().keySet()) {
+            if (!checkoutCommit.getBlobs().containsKey(filename)) {
+                File file = Utils.join(CWD, filename);
+                file.delete();
+            }
+        }
+
+        // Update HEAD to point at checked out branch
+        updateHead(branchName);
+
+        // Load and clear the staging area.
+        Index index = Index.load();
+        index.clear();
+        index.save();
     }
 
     /** Prints a log to the terminal starting with the most recent commit. */
@@ -259,6 +292,12 @@ public class Repository {
     public static String getCurrentHead() {
         String currentBranch = getCurrentBranch();
         return Utils.readContentsAsString(Utils.join(BRANCHES, currentBranch));
+    }
+
+    /** Returns the specified branch's head commit ID. */
+    public static String getBranchHead(String branchName) {
+        File branch = Utils.join(BRANCHES, branchName);
+        return Utils.readContentsAsString(branch);
     }
 
     /** Overwrites the named branch file with the newest commit ID. */
