@@ -34,7 +34,7 @@ public class Main {
                 if (args.length != 2) {
                     exitMessage("Incorrect operands.");
                 }
-                Repository.remove(args[1]);
+                Repository.rmCommand(args[1]);
                 break;
             case "commit":
                 if (args.length > 2) {
@@ -63,6 +63,12 @@ public class Main {
                     exitMessage("Incorrect operands.");
                 }
                 Repository.log();
+                break;
+            case "branch":
+                if (args.length != 2) {
+                    exitMessage("Incorrect operands.");
+                }
+                Repository.branch(args[1]);
                 break;
             default:
                 exitMessage("No command with that name exists.");
