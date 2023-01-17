@@ -136,9 +136,9 @@ public class Repository {
 
     /* Checkout commands.
      * There are three outcomes:
-     * 1. An entire branch is checked out.
-     * 2. A file is checked out from the HEAD.
-     * 3. A file is checked out from a specified commit.
+     * 1. A file is checked out from the HEAD.
+     * 2. A file is checked out from a specified commit.-sp21
+     * 3. An entire branch is checked out.
      * If a branch is being checked out, then it updates the HEAD file and
      * loads the checked out branch's head commit's files from its blobs.
      * */

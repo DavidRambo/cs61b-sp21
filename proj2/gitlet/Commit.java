@@ -116,6 +116,6 @@ public class Commit implements Serializable {
         DateFormat df = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
         String time = df.format(getTimestamp());
         String date = "\nDate: " + time + "\n";
-        return spacer + name + date + this.getMessage();
+        return spacer + name + date + this.getMessage() + "\n";
     }
 }
