@@ -203,12 +203,15 @@ public class Repository {
 
     /** Prints a log to the terminal starting with the most recent commit. */
     public static void log() {
+        StringBuilder output = new StringBuilder();
         String commitID = getCurrentHead();
         while (commitID != null) {
             Commit commit = Commit.load(commitID);
-            System.out.println(commit);
+            output.append(commit.toString());
+            output.append("\n");
             commitID = commit.getParentID();
         }
+        System.out.println(output);
     }
 
     /** Returns the name of the currently checked out branch. */
