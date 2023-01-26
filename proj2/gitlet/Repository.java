@@ -281,6 +281,23 @@ public class Repository {
         Utils.writeContents(newBranch, getCurrentHead());
     }
 
+    /** Deletes the branch with the given name. This removes only the pointer to that branch.
+     * Its associated commits are untouched.
+     */
+    public static void rmBranch(String branchName) {
+        if (getCurrentBranch().equals(branchName))
+            Main.exitMessage("Cannot remove the current branch.");
+
+//        List<String> branches = Utils.plainFilenamesIn(BRANCHES);
+//        assert branches != null;
+//        if (!branches.contains(branchName))
+//            Main.exitMessage("A branch with that name does not exist.");
+        File file = Utils.join(BRANCHES, branchName);
+
+        if (!file.delete())
+            Main.exitMessage("A branch with that name does not exist.");
+    }
+
     /** Prints out:
      * - what branches currently exist, marking the current with an asterisk
      * - files staged for addition
@@ -311,9 +328,11 @@ public class Repository {
         for (String filename : index.getRemovals())
             output.append(filename).append("\n");
 
+        /* The next two sections are extra credit. */
         output.append("\n=== Modifications Not Staged For Commit ===\n");
 
         output.append("\n=== Untracked Files ===\n");
+        // Use this.untrackedFiles() to retrieve a list of files.
 
         System.out.println(output);
     }

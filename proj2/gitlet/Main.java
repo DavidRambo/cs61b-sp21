@@ -76,6 +76,11 @@ public class Main {
                 }
                 Repository.status();
                 break;
+            case "rm-branch":
+                if (args.length != 2)
+                    exitMessage("Incorrect operands");
+                Repository.rmBranch(args[1]);
+                break;
             default:
                 exitMessage("No command with that name exists.");
         }
