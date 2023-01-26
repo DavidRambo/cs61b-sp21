@@ -153,7 +153,7 @@ public class Repository {
         updateBranchHead(getCurrentBranch(), commit.getID());
     }
 
-    /* Checkout commands.
+    /* *** Checkout Commands ***
      * There are three outcomes:
      * 1. A file is checked out from the HEAD.
      * 2. A file is checked out from a specified commit.-sp21
@@ -201,7 +201,9 @@ public class Repository {
      * Takes all files at the head of the specified branch and puts them into
      * the working directory, overwriting versions of those files already there.
      * Sets the checked out branch to be the HEAD. Any files tracked in current
-     * branch but not by the checked out branch are deleted.
+     * branch but not by the checked out branch are deleted. Note that this differs
+     * from Git, which would block a checkout command that would overwrite files
+     * that have been modified or staged for addition.
      * Staging area is cleared.*/
     public static void checkoutBranch(String branchName) {
         // Ensure branch exists.
@@ -382,6 +384,8 @@ public class Repository {
         /* Check for untracked files in the way. */
         if (untrackedFiles().isEmpty())
             Main.exitMessage("There is an untracked file in the way; delete it, or add and commit it first.");
+
+        // TODO: Handle abbreviated commit IDs.
         /* Try to load the given commit. Failure is handled by the load() method. */
         Commit commit = Commit.load(commitID);
 
