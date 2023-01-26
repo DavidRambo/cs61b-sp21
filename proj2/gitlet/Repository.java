@@ -254,7 +254,8 @@ public class Repository {
         index.save();
     }
 
-    /** Prints a log to the terminal starting with the most recent commit. */
+    /** Prints a log starting with the head commit and proceeding back through
+     * parent commits to the initial commit. */
     public static void log() {
         StringBuilder output = new StringBuilder();
         String commitID = getCurrentHead();
@@ -262,6 +263,18 @@ public class Repository {
             Commit commit = Commit.load(commitID);
             output.append(commit.toString()).append("\n");
             commitID = commit.getParentID();
+        }
+        System.out.println(output);
+    }
+
+    /** Like log, except displays information about all commits ever made. The order
+     * does not matter. */
+    public static void globalLog() {
+        StringBuilder output = new StringBuilder();
+        List<String> allCommits = Utils.plainFilenamesIn(COMMITS_DIR);
+        for (String commitID : allCommits) {
+            Commit commit = Commit.load(commitID);
+            output.append(commit.toString()).append("\n");
         }
         System.out.println(output);
     }

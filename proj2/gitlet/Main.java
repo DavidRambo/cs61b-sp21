@@ -64,6 +64,12 @@ public class Main {
                 }
                 Repository.log();
                 break;
+            case "global-log":
+                if (args.length != 1) {
+                    exitMessage("Incorrect operands.");
+                }
+                Repository.globalLog();
+                break;
             case "branch":
                 if (args.length != 2) {
                     exitMessage("Incorrect operands.");
