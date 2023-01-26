@@ -85,6 +85,8 @@ public class Commit implements Serializable {
     /** Loads a commit object from the file system. */
     public static Commit load(String commitID) {
         File file = Utils.join(Repository.COMMITS_DIR, commitID);
+        if (!file.exists())
+            Main.exitMessage("No commit with that id exists.");
         return Utils.readObject(file, Commit.class);
     }
 
