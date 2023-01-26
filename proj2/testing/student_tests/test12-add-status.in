@@ -1,12 +1,20 @@
 # Status with two adds
-I setup.inc
+I definitions.inc
+> init
+<<<
++ wug.txt wug.txt
+> add wug.txt
+<<<
++ notwug.txt notwug.txt
+> add notwug.txt
+<<<
 > status
 === Branches ===
 *master
 
 === Staged Files ===
-f.txt
-g.txt
+wug.txt
+notwug.txt
 
 === Removed Files ===
 
