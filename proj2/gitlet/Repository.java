@@ -223,8 +223,23 @@ public class Repository {
             }
         }
 
+        checkoutCommit(getBranchHead(branchName));
+
+        // Update HEAD to point at checked out branch
+        updateHead(branchName);
+
+        // Load and clear the staging area.
+        Index index = Index.load();
+        index.clear();
+        index.save();
+    }
+
+
+    /** Loads all files tracked by a given commit and deletes files that were tracked
+     * by preceding head but which it does not track. */
+    private static void checkoutCommit(String commitID) {
         // Load the commit to be checked out
-        Commit checkoutCommit = Commit.load(getBranchHead(branchName));
+        Commit checkoutCommit = Commit.load(commitID);
 
         // Load every file to working directory
         for (String filename : checkoutCommit.getBlobs().keySet()) {
@@ -238,20 +253,13 @@ public class Repository {
         }
 
         // Delete working files not tracked by checked out branch
+        Commit headCommit = Commit.load(getCurrentHead());
         for (String filename : headCommit.getBlobs().keySet()) {
             if (!checkoutCommit.getBlobs().containsKey(filename)) {
                 File file = Utils.join(CWD, filename);
                 file.delete();
             }
         }
-
-        // Update HEAD to point at checked out branch
-        updateHead(branchName);
-
-        // Load and clear the staging area.
-        Index index = Index.load();
-        index.clear();
-        index.save();
     }
 
     /** Prints a log starting with the head commit and proceeding back through
@@ -369,6 +377,20 @@ public class Repository {
         System.out.println(output);
     }
 
+    /** Checks out all the files tracked by the given commit. Removes tracked files that
+     * are not present in that commit. Also moves the current branch's head to that commit
+     * node. The commit ID may be abbreviated. Staging area is cleared. Basically, reset
+     * is checkout of an arbitrary commit that also changes the current branch head.
+     *
+     * @param commitID String of the given commit's ID
+     */
+    public static void reset(String commitID) {
+        /* Check for untracked files in the way. */
+
+        /* Try to load the given commit. Failure is handled by the load() method. */
+        Commit commit = Commit.load(commitID);
+    }
+
     /** Returns the name of the currently checked out branch. */
     public static String getCurrentBranch() {
         return Utils.readContentsAsString(HEAD);
@@ -401,6 +423,7 @@ public class Repository {
     public static LinkedList<String> untrackedFiles() {
         // LinkedList to hold untracked files.
         LinkedList<String> files = new LinkedList<>();
+
         /* First fill it with the names of files in working directory that are
         not referenced by the current commit. */
         Commit currHead = Commit.load(getCurrentHead());
