@@ -350,6 +350,25 @@ public class Repository {
         System.out.println(output);
     }
 
+    /** Prints out the ids of all commits that have the given commit message, one per line.
+     * @param message String of the message in the sought for commit(s).
+     */
+    public static void find(String message) {
+        List<String> allCommits = Utils.plainFilenamesIn(COMMITS_DIR);
+        StringBuilder output = new StringBuilder();
+
+        for (String commitID : allCommits) {
+            Commit commit = Commit.load(commitID);
+            if (commit.getMessage().equals(message))
+                output.append(commitID).append("\n");
+        }
+
+        if (output.isEmpty())
+            Main.exitMessage("Found no commit with that message.");
+
+        System.out.println(output);
+    }
+
     /** Returns the name of the currently checked out branch. */
     public static String getCurrentBranch() {
         return Utils.readContentsAsString(HEAD);
