@@ -260,8 +260,7 @@ public class Repository {
         String commitID = getCurrentHead();
         while (commitID != null) {
             Commit commit = Commit.load(commitID);
-            output.append(commit.toString());
-            output.append("\n");
+            output.append(commit.toString()).append("\n");
             commitID = commit.getParentID();
         }
         System.out.println(output);
@@ -286,10 +285,37 @@ public class Repository {
      * - what branches currently exist, marking the current with an asterisk
      * - files staged for addition
      * - files staged for removal
+     *   ::: Extra Credit :::
      * - modifications not staged for commit
      * - untracked files*/
     public static void status() {
-        throw new UnsupportedOperationException();
+        StringBuilder output = new StringBuilder();
+
+        /* Create list of branches, adding an asterisk to the currently checked out branch. */
+        output.append("=== Branches ===\n");
+        List<String> branches = Utils.plainFilenamesIn(BRANCHES);
+        String headBranch = getCurrentHead();
+        assert branches != null;
+        for (String branchName : branches) {
+            if (headBranch.equals(branchName))
+                output.append("*").append(branchName).append("\n");
+            else output.append(branchName).append("\n");
+        }
+
+        Index index = Index.load();
+        output.append("\n=== Staged Files ===\n");
+        for (String filename : index.getAdditions().keySet())
+            output.append(filename).append("\n");
+
+        output.append("\n=== Removed Files ===\n");
+        for (String filename : index.getRemovals())
+            output.append(filename).append("\n");
+
+        output.append("\n=== Modifications Not Staged For Commit ===\n");
+
+        output.append("\n=== Untracked Files ===\n");
+
+        System.out.println(output);
     }
 
     /** Returns the name of the currently checked out branch. */

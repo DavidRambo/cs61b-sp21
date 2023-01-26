@@ -70,6 +70,12 @@ public class Main {
                 }
                 Repository.branch(args[1]);
                 break;
+            case "status":
+                if (args.length != 1) {
+                    exitMessage("Incorrect operands");
+                }
+                Repository.status();
+                break;
             default:
                 exitMessage("No command with that name exists.");
         }
