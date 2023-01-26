@@ -215,13 +215,8 @@ public class Repository {
             Main.exitMessage("No need to check out the current branch.");
         }
         // Ensure no untracked files would be overwritten.
-        Commit headCommit = Commit.load(getCurrentHead());
-        HashMap<String, String> headBlobs = headCommit.getBlobs();
-        for (String filename : untrackedFiles()) {
-            if (headBlobs.containsKey(filename)) {
-                Main.exitMessage("There is an untracked file in the way; delete it, or add and commit it first.");
-            }
-        }
+        if (untrackedFiles().isEmpty())
+            Main.exitMessage("There is an untracked file in the way; delete it, or add and commit it first.");
 
         checkoutCommit(getBranchHead(branchName));
 
@@ -233,7 +228,6 @@ public class Repository {
         index.clear();
         index.save();
     }
-
 
     /** Loads all files tracked by a given commit and deletes files that were tracked
      * by preceding head but which it does not track. */
@@ -386,9 +380,15 @@ public class Repository {
      */
     public static void reset(String commitID) {
         /* Check for untracked files in the way. */
-
+        if (untrackedFiles().isEmpty())
+            Main.exitMessage("There is an untracked file in the way; delete it, or add and commit it first.");
         /* Try to load the given commit. Failure is handled by the load() method. */
         Commit commit = Commit.load(commitID);
+
+        checkoutCommit(commitID);
+
+        // Set head commit.
+        updateBranchHead(getCurrentBranch(), commitID);
     }
 
     /** Returns the name of the currently checked out branch. */
@@ -426,9 +426,9 @@ public class Repository {
 
         /* First fill it with the names of files in working directory that are
         not referenced by the current commit. */
-        Commit currHead = Commit.load(getCurrentHead());
+        Commit headCommit = Commit.load(getCurrentHead());
         for (String filename : Objects.requireNonNull(plainFilenamesIn(CWD))) {
-            if (!currHead.getBlobs().containsKey(filename)) {
+            if (!headCommit.getBlobs().containsKey(filename)) {
                 files.add(filename);
             }
         }
