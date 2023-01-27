@@ -174,7 +174,10 @@ public class Repository {
     /** Checkout a single file from a specified commit.
      * java gitlet.Main checkout [commit id] -- [file name] */
     public static void checkoutFile(String commitID, String filename) {
-        // TODO: Handle abbreviated commit IDs.
+        // Try to find a matching ID for abbreviated IDs of fewer than 40 characters
+        if (commitID.length() < 40) {
+            commitID = matchCommitID(commitID);
+        }
         // Ensure a commit with that ID exists.
         File commitFile = Utils.join(COMMITS_DIR, commitID);
         if (!commitFile.exists()) {
@@ -194,6 +197,35 @@ public class Repository {
         // Write to CWD
         File checkoutFile = Utils.join(CWD, filename);
         Utils.writeContents(checkoutFile, blob.getContents());
+    }
+
+    /** Searches through the commit object files for the best match against the given abbreviated ID.
+     * It compares the abbreviated ID's characters against each of those files, removing failed matches.
+     * If one remains, it returns; otherwise it exits with a message.
+     * <p>
+     * Since Gitlet does not implement a tree structure by which to organize its commit objects, this
+     * is slower relative to how Git does it. The Utils.plainFilenamesIn() method does provide a sorted
+     * List of Strings, so one optimization would stop checking for a match once the range of Strings exceeds the
+     * abbreviated ID.
+     *
+     * @param shortID abbreviated ID for the commit
+     * @return full commit ID
+     */
+    private static String matchCommitID(String shortID) {
+        List<String> allCommits = Utils.plainFilenamesIn(COMMITS_DIR);
+        assert allCommits != null;
+        List<String> matchingCommits = new ArrayList<>();
+
+        for (String fullID : allCommits) {
+            if (fullID.regionMatches(true, 0, shortID, 0, shortID.length()))
+                matchingCommits.add(fullID);
+        }
+
+        // More than one match, then exit.
+        if (matchingCommits.size() != 1)
+            Main.exitMessage("No commit with that ID exists.");
+
+        return matchingCommits.get(0);
     }
 
     /** Checkout an entire branch.
@@ -385,7 +417,10 @@ public class Repository {
         if (untrackedFiles().isEmpty())
             Main.exitMessage("There is an untracked file in the way; delete it, or add and commit it first.");
 
-        // TODO: Handle abbreviated commit IDs.
+        // Try to find a matching ID for abbreviated IDs of fewer than 40 characters
+        if (commitID.length() < 40) {
+            commitID = matchCommitID(commitID);
+        }
         /* Try to load the given commit. Failure is handled by the load() method. */
         Commit commit = Commit.load(commitID);
 
