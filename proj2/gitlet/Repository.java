@@ -5,8 +5,6 @@ import java.util.*;
 
 import static gitlet.Utils.*;
 
-// TODO: any imports you need here
-
 /** Represents a gitlet repository.
  *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
@@ -428,6 +426,54 @@ public class Repository {
 
         // Set head commit.
         updateBranchHead(getCurrentBranch(), commitID);
+    }
+
+    /** Merges the current branch with the specified "given" branch.
+     * It treats the current branch head as the parent commit, and then by comparing
+     * files between the split point commit, the HEAD commit, and the head of the given
+     * branch, it stages files for addition or removal before creating a new commit.*/
+    public static void merge(String givenBranch) {
+        /* Check for untracked files in the way. */
+        if (untrackedFiles().isEmpty())
+            Main.exitMessage("There is an untracked file in the way; delete it, or add and commit it first.");
+
+        /* Check whether staging area is clear. */
+        Index index = Index.load();
+        if (!index.getAdditions().isEmpty() || !index.getRemovals().isEmpty())
+            Main.exitMessage("You have uncommited changes.");
+
+        /* Check that merge is possible with specified branch. */
+        List<String> branches = Utils.plainFilenamesIn(BRANCHES);
+        assert branches != null;
+        if (!branches.contains(givenBranch)) {
+            Main.exitMessage("No such branch exists.");
+        }
+        // Ensure not already checked out.
+        if (givenBranch.equals(getCurrentBranch())) {
+            Main.exitMessage("Cannot merge a branch with itself.");
+        }
+
+        /* Load the two commits. */
+        Commit headCommit = Commit.load(getCurrentHead());
+        Commit givenCommit = Commit.load(getBranchHead(givenBranch));
+
+        /* Find the common ancestor. */
+        LinkedList<String> currentHistory = Commit.getHistory(headCommit.getID());
+        LinkedList<String> givenHistory = Commit.getHistory(givenCommit.getID());
+        // Check whether given branch is ancestor already of current branch.
+        if (currentHistory.contains(givenCommit.getID()))
+            Main.exitMessage("Given branch is an ancestor of the current branch.");
+        // Check whether current branch can be fast-forwarded.
+        if (givenHistory.contains(headCommit.getID())) {
+            checkoutBranch(givenBranch);
+            System.out.println("Current branch is fast-forwarded.");
+            return;
+        }
+        // Determine split point.
+        String splitID = Commit.findSplit(currentHistory, givenHistory);
+        Commit splitCommit = Commit.load(splitID);
+
+        /* Work through the files referenced by each of the three commits. */
     }
 
     /** Returns the name of the currently checked out branch. */
