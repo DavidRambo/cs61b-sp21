@@ -3,11 +3,8 @@ package gitlet;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.Date;
-import java.util.Formatter;
+import java.util.*;
 import java.io.Serializable;
-import java.util.Locale;
 
 /** Represents a gitlet commit object.
  * The snapshot of the working directory is recorded as a HashMap. Its key is a
@@ -111,6 +108,10 @@ public class Commit implements Serializable {
         return this.firstParentID;
     }
 
+    public String getSecondParentID() {
+        return this.secondParentID;
+    }
+
     public Date getTimestamp() {
         return this.timestamp;
     }
@@ -128,4 +129,36 @@ public class Commit implements Serializable {
         String date = "\nDate: " + time + "\n";
         return spacer + name + date + this.getMessage() + "\n";
     }
+
+    /** Returns a LinkedList of the parent commit IDs of the specified commit.
+     * In order to accommodate merge commits, which have two parents, this method uses
+     * an intermediary queue to interlink divergent branch histories. */
+    public static LinkedList<String> getHistory(String headID) {
+        LinkedList<String> history = new LinkedList<>();
+        LinkedList<String> queue = new LinkedList<>();
+        queue.add(headID);
+
+        while (!queue.isEmpty()) {
+            String currentID = queue.pop();
+            history.add(headID);
+            Commit currentCommit = load(currentID);
+            if (currentCommit.getParentID() != null)
+                queue.add(currentCommit.getParentID());
+            if (currentCommit.getSecondParentID() != null)
+                queue.add(currentCommit.getSecondParentID());
+        }
+
+        return history;
+    }
+
+    /** Determines the latest common ancestor of the two specified commit histories. */
+    public static String findSplit(LinkedList<String> currentHistory, LinkedList<String> givenHistory) {
+        for (String ID : givenHistory) {
+            if (currentHistory.contains(ID))
+                return ID;
+        }
+        Main.exitMessage("No common ancestor found.");
+        return null;
+    }
+
 }
