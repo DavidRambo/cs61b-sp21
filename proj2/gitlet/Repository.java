@@ -89,9 +89,8 @@ public class Repository {
         Blob blob = new Blob(Utils.readContentsAsString(file));
         // Load current commit in order to check for changes.
         Commit commit = Commit.load(getCurrentHead());
-        HashMap<String, String> currentBlobs = commit.getBlobs();
         // Check whether file is unchanged since current commit.
-        if (currentBlobs.containsKey(blob.getID())) {
+        if (commit.getBlobs().containsKey(blob.getID())) {
             // Remove from staging area if there.
             index.getAdditions().remove(filename);
         }
@@ -420,7 +419,7 @@ public class Repository {
             commitID = matchCommitID(commitID);
         }
         /* Try to load the given commit. Failure is handled by the load() method. */
-        Commit commit = Commit.load(commitID);
+//        Commit commit = Commit.load(commitID);
 
         checkoutCommit(commitID);
 
@@ -431,7 +430,8 @@ public class Repository {
     /** Merges the current branch with the specified "given" branch.
      * It treats the current branch head as the parent commit, and then by comparing
      * files between the split point commit, the HEAD commit, and the head of the given
-     * branch, it stages files for addition or removal before creating a new commit.*/
+     * branch, it stages files for addition or removal before creating a new commit.
+     */
     public static void merge(String givenBranch) {
         /* Check for untracked files in the way. */
         if (untrackedFiles().isEmpty())
@@ -455,7 +455,8 @@ public class Repository {
 
         /* Load the two commits. */
         Commit headCommit = Commit.load(getCurrentHead());
-        Commit givenCommit = Commit.load(getBranchHead(givenBranch));
+        String givenID = getBranchHead(givenBranch);
+        Commit givenCommit = Commit.load(givenID);
 
         /* Find the common ancestor. */
         LinkedList<String> currentHistory = Commit.getHistory(headCommit.getID());
@@ -469,11 +470,106 @@ public class Repository {
             System.out.println("Current branch is fast-forwarded.");
             return;
         }
-        // Determine split point.
+        // Determine split point and load that commit.
         String splitID = Commit.findSplit(currentHistory, givenHistory);
         Commit splitCommit = Commit.load(splitID);
 
         /* Work through the files referenced by each of the three commits. */
+        // To hold filenames in conflict.
+        LinkedList<String> conflicts = new LinkedList<>();
+
+        // Go through each file in the current branch's HEAD commit.
+        for (String filename : headCommit.getBlobs().keySet()) {
+            // Load the blob ID for the file
+            String headBlob = headCommit.getBlobs().get(filename);
+
+            // Check for file in given branch and load blobID of its version
+            if (givenCommit.getBlobs().containsKey(filename)) {
+                String givenBlob = givenCommit.getBlobs().get(filename);
+
+                // Check for file at split point
+                if (splitCommit.getBlobs().containsKey(filename)) {
+                    String splitBlob = splitCommit.getBlobs().get(filename);
+
+                    // Modified in given branch...
+                    if (!splitBlob.equals(givenBlob)) {
+                        // but not modified in HEAD -> keep given version
+                        if (splitBlob.equals(headBlob)) {
+                            index.stage(filename, givenBlob);
+                        // and is modified in HEAD -> check for conflict
+                        } else if (!givenBlob.equals(headBlob)) {
+                            conflicts.add(filename);
+                        }
+                    }
+
+                } else { // Not in split commit means modified in both.
+                    // If different, then in conflict.
+                    if (!headBlob.equals(givenBlob))
+                        conflicts.add(filename);
+                    // Otherwise, do nothing in order to keep the HEAD version.
+                }
+            } else { // Not in given branch.
+                if (splitCommit.getBlobs().containsKey(filename)) {
+                    String splitBlob = splitCommit.getBlobs().get(filename);
+                    // If unmodified in HEAD since split, then remove.
+                    if (headBlob.equals(splitBlob)) {
+                        index.remove(filename);
+                    }
+                } // Otherwise, unique to HEAD, so do nothing to keep it.
+            }
+        }
+
+        // Go through files in given branch that are NOT in current branch's HEAD commit.
+        for (String filename : givenCommit.getBlobs().keySet()) {
+            String givenBlob = givenCommit.getBlobs().get(filename);
+
+            if (!headCommit.getBlobs().containsKey(filename)) {
+                // Not in split (nor in HEAD), then stage given branch's version.
+                if (!splitCommit.getBlobs().containsKey(filename)) {
+                    index.stage(filename, givenBlob);
+                // Else, since it is in split, if modified then stage given branch's version.
+                } else if (!givenBlob.equals(splitCommit.getBlobs().get(filename))) {
+                    index.stage(filename, givenBlob);
+                } /* Otherwise, it is unmodified in given branch since split,
+                     but not present in HEAD, so it remains removed. */
+            }
+        }
+
+        /* Handle merge conflicts by concatenating the two versions and staging the file for addition.
+        * Whereas the above logic handles already existing blobs, and therefore stages directly
+        * with the index, here a new blob needs to be created, so the Repository.add() method is used.
+        * Then conclude the merge and print out merge conflict message. */
+        if (!conflicts.isEmpty()) {
+            for (String filename : conflicts) {
+                StringBuilder conflictFile = new StringBuilder();
+                conflictFile.append("<<<<<<< HEAD\n");
+                // Load the current HEAD blob.
+                File headBlobFile = Utils.join(BLOBS_DIR, headCommit.getBlobs().get(filename));
+                Blob headBlob = Utils.readObject(headBlobFile, Blob.class);
+                conflictFile.append(headBlob.getContents());
+                conflictFile.append("=======\n");
+                // Load the given blob.
+                File givenBlobFile = Utils.join(BLOBS_DIR, givenCommit.getBlobs().get(filename));
+                Blob givenBlob = Utils.readObject(givenBlobFile, Blob.class);
+                conflictFile.append(givenBlob.getContents());
+                conflictFile.append(">>>>>>>");
+                File file = Utils.join(CWD, filename);
+                Utils.writeContents(file, conflictFile.toString());
+                add(filename);
+            }
+            StringBuilder mergeMessage = new StringBuilder();
+            mergeMessage.append("Merged ").append(getCurrentBranch()).append(" into ").append(givenBranch).append(".");
+            Commit mergeCommit = new Commit(headCommit.getID(), givenID, mergeMessage.toString());
+            mergeCommit.save();
+            updateBranchHead(getCurrentBranch(), mergeCommit.getID());
+            System.out.println("Encountered a merge conflict");
+        } else { // No conflicts. Conclude merge and print message.
+            StringBuilder mergeMessage = new StringBuilder();
+            mergeMessage.append("Merged ").append(getCurrentBranch()).append(" merged into ").append(givenBranch).append(".");
+            Commit mergeCommit = new Commit(headCommit.getID(), givenID, mergeMessage.toString());
+            mergeCommit.save();
+            updateBranchHead(getCurrentBranch(), mergeCommit.getID());
+        }
     }
 
     /** Returns the name of the currently checked out branch. */
