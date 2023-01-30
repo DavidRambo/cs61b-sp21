@@ -521,15 +521,16 @@ public class Repository {
 
         // Go through files in given branch that are NOT in current branch's HEAD commit.
         for (String filename : givenCommit.getBlobs().keySet()) {
-            String givenBlob = givenCommit.getBlobs().get(filename);
+            String givenBlobID = givenCommit.getBlobs().get(filename);
 
             if (!headCommit.getBlobs().containsKey(filename)) {
                 // Not in split (nor in HEAD), then stage given branch's version.
                 if (!splitCommit.getBlobs().containsKey(filename)) {
-                    index.stage(filename, givenBlob);
+                    checkoutFile(givenID, filename);
+                    index.stage(filename, givenBlobID);
                 // Else, since it is in split, if modified then stage given branch's version.
-                } else if (!givenBlob.equals(splitCommit.getBlobs().get(filename))) {
-                    index.stage(filename, givenBlob);
+                } else if (!givenBlobID.equals(splitCommit.getBlobs().get(filename))) {
+                    index.stage(filename, givenBlobID);
                 } /* Otherwise, it is unmodified in given branch since split,
                      but not present in HEAD, so it remains removed. */
             }
