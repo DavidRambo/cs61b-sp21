@@ -619,7 +619,6 @@ public class Repository {
     }
 
     /** Returns a list of untracked files in the working directory. */
-    // TODO: Fix. This is causing incorrect errors.
     public static LinkedList<String> untrackedFiles() {
         // LinkedList to hold untracked files.
         LinkedList<String> files = new LinkedList<>();
