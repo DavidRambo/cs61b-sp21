@@ -39,8 +39,9 @@ public class Main {
             case "commit":
                 if (args.length > 2) {
                     exitMessage("Incorrect operands.");
-                }
-                if (args.length == 1) {
+                } else if (args.length == 1) {
+                    exitMessage("Please enter a commit message.");
+                } else if (args[1].equals("")) {
                     exitMessage("Please enter a commit message.");
                 }
                 Repository.commit(args[1]);
