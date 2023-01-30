@@ -140,7 +140,7 @@ public class Commit implements Serializable {
 
         while (!queue.isEmpty()) {
             String currentID = queue.pop();
-            history.add(headID);
+            history.add(currentID);
             Commit currentCommit = load(currentID);
             if (currentCommit.getParentID() != null)
                 queue.add(currentCommit.getParentID());
