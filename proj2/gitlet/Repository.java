@@ -6,8 +6,6 @@ import java.util.*;
 import static gitlet.Utils.*;
 
 /** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
  *
  *  @author David Rambo
  */
@@ -196,14 +194,15 @@ public class Repository {
         Utils.writeContents(checkoutFile, blob.getContents());
     }
 
-    /** Searches through the commit object files for the best match against the given abbreviated ID.
-     * It compares the abbreviated ID's characters against each of those files, removing failed matches.
-     * If one remains, it returns; otherwise it exits with a message.
+    /** Searches through the commit object files for the best match against the given
+     * abbreviated ID. It compares the abbreviated ID's characters against each of those
+     * files, removing failed matches. If one remains, it returns; otherwise it exits
+     * with a message.
      * <p>
-     * Since Gitlet does not implement a tree structure by which to organize its commit objects, this
-     * is slower relative to how Git does it. The Utils.plainFilenamesIn() method does provide a sorted
-     * List of Strings, so one optimization would stop checking for a match once the range of Strings exceeds the
-     * abbreviated ID.
+     * Since Gitlet does not implement a tree structure by which to organize its commit
+     * objects, this is slower relative to how Git does it. The Utils.plainFilenamesIn()
+     * method does provide a sorted List of Strings, so one optimization would stop
+     * checking for a match once the range of Strings exceeds the abbreviated ID.
      *
      * @param shortID abbreviated ID for the commit
      * @return full commit ID
@@ -214,13 +213,15 @@ public class Repository {
         List<String> matchingCommits = new ArrayList<>();
 
         for (String fullID : allCommits) {
-            if (fullID.regionMatches(true, 0, shortID, 0, shortID.length()))
+            if (fullID.regionMatches(true, 0, shortID, 0, shortID.length())) {
                 matchingCommits.add(fullID);
+            }
         }
 
         // More than one match, then exit.
-        if (matchingCommits.size() != 1)
+        if (matchingCommits.size() != 1) {
             Main.exitMessage("No commit with that ID exists.");
+        }
 
         return matchingCommits.get(0);
     }
@@ -246,9 +247,9 @@ public class Repository {
             Main.exitMessage("No need to check out the current branch.");
         }
         // Ensure no untracked files would be overwritten.
-        if (untrackedFiles().isEmpty())
+        if (untrackedFiles().isEmpty()) {
             Main.exitMessage("There is an untracked file in the way; delete it, or add and commit it first.");
-
+        }
         checkoutCommit(getBranchHead(branchName));
 
         // Update HEAD to point at checked out branch
@@ -319,7 +320,7 @@ public class Repository {
         // Retrieve names of extant branches
         List<String> branches = Utils.plainFilenamesIn(BRANCHES);
         assert branches != null;
-        if (branches.contains(name)){
+        if (branches.contains(name)) {
             Main.exitMessage("A branch with that name already exists.");
         }
 
@@ -331,9 +332,9 @@ public class Repository {
      * Its associated commits are untouched.
      */
     public static void rmBranch(String branchName) {
-        if (getCurrentBranch().equals(branchName))
+        if (getCurrentBranch().equals(branchName)) {
             Main.exitMessage("Cannot remove the current branch.");
-
+        }
 //        List<String> branches = Utils.plainFilenamesIn(BRANCHES);
 //        assert branches != null;
 //        if (!branches.contains(branchName))
@@ -360,19 +361,23 @@ public class Repository {
         String headBranch = getCurrentHead();
         assert branches != null;
         for (String branchName : branches) {
-            if (headBranch.equals(branchName))
+            if (headBranch.equals(branchName)) {
                 output.append("*").append(branchName).append("\n");
-            else output.append(branchName).append("\n");
+            } else {
+                output.append(branchName).append("\n");
+            }
         }
 
         Index index = Index.load();
         output.append("\n=== Staged Files ===\n");
-        for (String filename : index.getAdditions().keySet())
+        for (String filename : index.getAdditions().keySet()) {
             output.append(filename).append("\n");
+        }
 
         output.append("\n=== Removed Files ===\n");
-        for (String filename : index.getRemovals())
+        for (String filename : index.getRemovals()) {
             output.append(filename).append("\n");
+        }
 
         /* The next two sections are extra credit. */
         output.append("\n=== Modifications Not Staged For Commit ===\n");
@@ -392,13 +397,14 @@ public class Repository {
 
         for (String commitID : allCommits) {
             Commit commit = Commit.load(commitID);
-            if (commit.getMessage().equals(message))
+            if (commit.getMessage().equals(message)) {
                 output.append(commitID).append("\n");
+            }
         }
 
-        if (output.isEmpty())
+        if (output.isEmpty()) {
             Main.exitMessage("Found no commit with that message.");
-
+        }
         System.out.println(output);
     }
 
@@ -411,15 +417,14 @@ public class Repository {
      */
     public static void reset(String commitID) {
         /* Check for untracked files in the way. */
-        if (untrackedFiles().isEmpty())
-            Main.exitMessage("There is an untracked file in the way; delete it, or add and commit it first.");
-
+        if (untrackedFiles().isEmpty()) {
+            Main.exitMessage("There is an untracked file in the way; delete it, " +
+                    "or add and commit it first.");
+        }
         // Try to find a matching ID for abbreviated IDs of fewer than 40 characters
         if (commitID.length() < 40) {
             commitID = matchCommitID(commitID);
         }
-        /* Try to load the given commit. Failure is handled by the load() method. */
-//        Commit commit = Commit.load(commitID);
 
         checkoutCommit(commitID);
 
@@ -434,13 +439,15 @@ public class Repository {
      */
     public static void merge(String givenBranch) {
         /* Check for untracked files in the way. */
-        if (untrackedFiles().isEmpty())
-            Main.exitMessage("There is an untracked file in the way; delete it, or add and commit it first.");
-
+        if (untrackedFiles().isEmpty()) {
+            Main.exitMessage("There is an untracked file in the way; delete it, " +
+                    "or add and commit it first.");
+        }
         /* Check whether staging area is clear. */
         Index index = Index.load();
-        if (!index.getAdditions().isEmpty() || !index.getRemovals().isEmpty())
+        if (!index.getAdditions().isEmpty() || !index.getRemovals().isEmpty()) {
             Main.exitMessage("You have uncommited changes.");
+        }
 
         /* Check that merge is possible with specified branch. */
         List<String> branches = Utils.plainFilenamesIn(BRANCHES);
@@ -462,8 +469,9 @@ public class Repository {
         LinkedList<String> currentHistory = Commit.getHistory(headCommit.getID());
         LinkedList<String> givenHistory = Commit.getHistory(givenCommit.getID());
         // Check whether given branch is ancestor already of current branch.
-        if (currentHistory.contains(givenCommit.getID()))
+        if (currentHistory.contains(givenCommit.getID())) {
             Main.exitMessage("Given branch is an ancestor of the current branch.");
+        }
         // Check whether current branch can be fast-forwarded.
         if (givenHistory.contains(headCommit.getID())) {
             checkoutBranch(givenBranch);
@@ -536,10 +544,11 @@ public class Repository {
             }
         }
 
-        /* Handle merge conflicts by concatenating the two versions and staging the file for addition.
-        * Whereas the above logic handles already existing blobs, and therefore stages directly
-        * with the index, here a new blob needs to be created, so the Repository.add() method is used.
-        * Then conclude the merge and print out merge conflict message. */
+        /* Handle merge conflicts by concatenating the two versions and staging the file
+         * for addition. Whereas the above logic handles already existing blobs, and therefore
+         * stages directly with the index, here a new blob needs to be created, so the
+         * Repository.add() method is used. Then conclude the merge and print out merge
+         * conflict message. */
         if (!conflicts.isEmpty()) {
             for (String filename : conflicts) {
                 StringBuilder conflictFile = new StringBuilder();
@@ -559,14 +568,22 @@ public class Repository {
                 add(filename);
             }
             StringBuilder mergeMessage = new StringBuilder();
-            mergeMessage.append("Merged ").append(getCurrentBranch()).append(" into ").append(givenBranch).append(".");
+            mergeMessage.append("Merged ");
+            mergeMessage.append(getCurrentBranch());
+            mergeMessage.append(" into ");
+            mergeMessage.append(givenBranch);
+            mergeMessage.append(".");
             Commit mergeCommit = new Commit(headCommit.getID(), givenID, mergeMessage.toString());
             mergeCommit.save();
             updateBranchHead(getCurrentBranch(), mergeCommit.getID());
             System.out.println("Encountered a merge conflict");
         } else { // No conflicts. Conclude merge and print message.
             StringBuilder mergeMessage = new StringBuilder();
-            mergeMessage.append("Merged ").append(getCurrentBranch()).append(" merged into ").append(givenBranch).append(".");
+            mergeMessage.append("Merged ");
+            mergeMessage.append(getCurrentBranch());
+            mergeMessage.append(" merged into ");
+            mergeMessage.append(givenBranch);
+            mergeMessage.append(".");
             Commit mergeCommit = new Commit(headCommit.getID(), givenID, mergeMessage.toString());
             mergeCommit.save();
             updateBranchHead(getCurrentBranch(), mergeCommit.getID());

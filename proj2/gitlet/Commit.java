@@ -82,8 +82,9 @@ public class Commit implements Serializable {
     /** Loads a commit object from the file system. */
     public static Commit load(String commitID) {
         File file = Utils.join(Repository.COMMITS_DIR, commitID);
-        if (!file.exists())
+        if (!file.exists()) {
             Main.exitMessage("No commit with that id exists.");
+        }
         return Utils.readObject(file, Commit.class);
     }
 
@@ -142,10 +143,12 @@ public class Commit implements Serializable {
             String currentID = queue.pop();
             history.add(currentID);
             Commit currentCommit = load(currentID);
-            if (currentCommit.getParentID() != null)
+            if (currentCommit.getParentID() != null) {
                 queue.add(currentCommit.getParentID());
-            if (currentCommit.getSecondParentID() != null)
+            }
+            if (currentCommit.getSecondParentID() != null) {
                 queue.add(currentCommit.getSecondParentID());
+            }
         }
 
         return history;
@@ -153,9 +156,10 @@ public class Commit implements Serializable {
 
     /** Determines the latest common ancestor of the two specified commit histories. */
     public static String findSplit(LinkedList<String> currentHistory, LinkedList<String> givenHistory) {
-        for (String ID : givenHistory) {
-            if (currentHistory.contains(ID))
-                return ID;
+        for (String commitID : givenHistory) {
+            if (currentHistory.contains(commitID)) {
+                return commitID;
+            }
         }
         Main.exitMessage("No common ancestor found.");
         return null;
