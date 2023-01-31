@@ -275,10 +275,10 @@ public class Repository {
             Utils.writeContents(checkoutFile, content);
         }
 
-        /* Delete working files that are tracked by the current head commit
-         * but not tracked by the given commit being checked out. */
-        Commit headCommit = Commit.load(getCurrentHead());
-        for (String filename : headCommit.getBlobs().keySet()) {
+        /* Delete working files that are not tracked by the given commit. */
+        List<String> plainFiles = Utils.plainFilenamesIn(CWD);
+        assert plainFiles != null;
+        for (String filename : plainFiles) {
             if (!checkoutCommit.getBlobs().containsKey(filename)) {
                 File file = Utils.join(CWD, filename);
                 file.delete();
