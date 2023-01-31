@@ -71,4 +71,14 @@ public class Index implements Serializable {
     public boolean isStaged(String filename) {
         return getAdditions().containsKey(filename);
     }
+
+    /** Returns the contents of a file staged for addition at the time that it was staged. */
+    public String getContent(String filename) {
+        assert getAdditions().containsKey(filename);
+        String blobID = getAdditions().get(filename);
+        File stagedBlobFile = Utils.join(Repository.BLOBS_DIR, blobID);
+        assert stagedBlobFile.exists();
+        Blob stagedBlob = Utils.readObject(stagedBlobFile, Blob.class);
+        return stagedBlob.getContents();
+    }
 }
