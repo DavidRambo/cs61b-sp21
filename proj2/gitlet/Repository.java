@@ -112,13 +112,9 @@ public class Repository {
         Commit headCommit = Commit.load(getCurrentHead());
 
         if (index.isStaged(filename) || headCommit.getBlobs().containsKey(filename)) {
-            index.remove(filename);
+            index.remove(filename); // Handles whether file should be deleted.
         } else {
             Main.exitMessage("No reason to remove the file.");
-        }
-
-        if (fileExists(filename)) {
-            Utils.join(CWD, filename).delete();
         }
     }
 
@@ -383,6 +379,9 @@ public class Repository {
 
         /* The next two sections are extra credit. */
         output.append("\n=== Modifications Not Staged For Commit ===\n");
+        for (String filename : modifiedFiles()) {
+            output.append(filename).append("\n");
+        }
 
         output.append("\n=== Untracked Files ===\n");
         for (String filename : untrackedFiles()) {
@@ -647,6 +646,80 @@ public class Repository {
         }
         Collections.sort(files);
         return files;
+    }
+
+    /** Returns a list of files that have been modified but not staged, including a parenthetical
+     * indication of whether the file has been modified or deleted.
+     * Such a file is either:
+     * - tracked in current commit, changed in working directory, but not staged;
+     * - staged for addition, but with different contents than in the working directory;
+     * - staged for addition, but deleted in the working directory;
+     * - not staged for removal, but tracked in the current commit and deleted from the
+     *   working directory.
+     * */
+    public static LinkedList<String> modifiedFiles() {
+        LinkedList<String> files = new LinkedList<>();
+
+        Commit headCommit = Commit.load(getCurrentHead());
+        Index index = Index.load();
+        List<String> allWorkingFiles = Utils.plainFilenamesIn(CWD);
+
+        /* Check tracked files. */
+        for (String filename : headCommit.getBlobs().keySet()) {
+            File workingFile = Utils.join(CWD, filename);
+
+            // File was removed from working directory and not staged for removal.
+            if (!workingFile.exists() && !index.getRemovals().contains(filename)) {
+                files.add(filename + " (deleted)");
+                continue;
+            }
+
+            if (workingFile.exists()) {
+                String currentContent = Utils.readContentsAsString(workingFile);
+                if (index.getAdditions().containsKey(filename)) {
+                    String stagedContent = index.getContent(filename);
+                    if (!currentContent.equals(stagedContent)) {
+                        // Was staged, but has since been changed.
+                        files.add(filename + " (modified)");
+                        continue;
+                    }
+                } else {
+                    String trackedContent = getBlobContent(getCurrentHead(), filename);
+                    if (!currentContent.equals(trackedContent)) {
+                        // Not staged and changed since last commit.
+                        files.add(filename + " (modified)");
+                        continue;
+                    }
+                }
+            }
+        }
+
+        /* Check files that are not yet tracked, but staged for addition.
+        * If deleted from working directory, then mark down. */
+        for (String filename : index.getAdditions().keySet()) {
+            if (!headCommit.getBlobs().containsKey(filename)) {
+                File file = Utils.join(CWD, filename);
+                if (!file.exists()) {
+                    files.add(filename + " (deleted)");
+                }
+            }
+        }
+
+        Collections.sort(files);
+        return files;
+    }
+
+    /** Returns the contents of a blob.
+     * @param commitID ID of the commit that references the blob
+     * @param filename name of the file of which the blob stores a snapshot */
+    public static String getBlobContent(String commitID, String filename) {
+        Commit commit = Commit.load(commitID);
+        File blobFile = Utils.join(BLOBS_DIR, commit.getBlobs().get(filename));
+        if (!blobFile.exists()) {
+            Main.exitMessage("No blob exists for" + filename + " in commit " + commitID);
+        }
+        Blob blob = Utils.readObject(blobFile, Blob.class);
+        return blob.getContents();
     }
 
     /** Checks whether the file exists in the working directory. */
