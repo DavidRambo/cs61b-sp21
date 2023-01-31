@@ -270,16 +270,13 @@ public class Repository {
 
         // Load every file to working directory
         for (String filename : checkoutCommit.getBlobs().keySet()) {
-            String blobID = checkoutCommit.getBlobs().get(filename);
-            // Load the blob.
-            File blobFile = Utils.join(BLOBS_DIR, blobID);
-            Blob blob = Utils.readObject(blobFile, Blob.class);
-            // Write to CWD
+            String content = getBlobContent(commitID, filename);
             File checkoutFile = Utils.join(CWD, filename);
-            Utils.writeContents(checkoutFile, blob.getContents());
+            Utils.writeContents(checkoutFile, content);
         }
 
-        // Delete working files not tracked by checked out branch
+        /* Delete working files that are tracked by the current head commit
+         * but not tracked by the given commit being checked out. */
         Commit headCommit = Commit.load(getCurrentHead());
         for (String filename : headCommit.getBlobs().keySet()) {
             if (!checkoutCommit.getBlobs().containsKey(filename)) {
@@ -434,6 +431,11 @@ public class Repository {
         }
 
         checkoutCommit(commitID);
+
+        // Load and clear the staging area.
+        Index index = Index.load();
+        index.clear();
+        index.save();
 
         // Set head commit.
         updateBranchHead(getCurrentBranch(), commitID);
