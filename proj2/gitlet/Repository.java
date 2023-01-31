@@ -106,10 +106,6 @@ public class Repository {
      * the working directory if the user has not already done so. (Does not remove
      * if it is untracked in the current commit.) */
     public static void rmCommand(String filename) {
-        // Ensure file with that name exists.
-        if (!fileExists(filename)) {
-            Main.exitMessage("File by that name does not exist.");
-        }
         // Load the staging area.
         Index index = Index.load();
         // Load head commit.
@@ -119,6 +115,10 @@ public class Repository {
             index.remove(filename);
         } else {
             Main.exitMessage("No reason to remove the file.");
+        }
+
+        if (fileExists(filename)) {
+            Utils.join(CWD, filename).delete();
         }
     }
 
