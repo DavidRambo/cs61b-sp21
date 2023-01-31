@@ -360,7 +360,7 @@ public class Repository {
         /* Create list of branches, adding an asterisk to the currently checked out branch. */
         output.append("=== Branches ===\n");
         List<String> branches = Utils.plainFilenamesIn(BRANCHES);
-        String headBranch = getCurrentHead();
+        String headBranch = getCurrentBranch();
         assert branches != null;
         for (String branchName : branches) {
             if (headBranch.equals(branchName)) {
