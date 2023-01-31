@@ -385,7 +385,9 @@ public class Repository {
         output.append("\n=== Modifications Not Staged For Commit ===\n");
 
         output.append("\n=== Untracked Files ===\n");
-        // Use this.untrackedFiles() to retrieve a list of files.
+        for (String filename : untrackedFiles()) {
+            output.append(filename).append("\n");
+        }
 
         System.out.println(output);
     }
