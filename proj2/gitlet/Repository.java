@@ -645,6 +645,7 @@ public class Repository {
                 files.add(filename);
             }
         }
+        Collections.sort(files);
         return files;
     }
 
