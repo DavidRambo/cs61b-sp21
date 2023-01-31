@@ -248,8 +248,8 @@ public class Repository {
         }
         // Ensure no untracked files would be overwritten.
         if (!untrackedFiles().isEmpty()) {
-            Main.exitMessage("There is an untracked file in the way; delete it, " +
-                    "or add and commit it first.");
+            Main.exitMessage("There is an untracked file in the way; delete it, "
+                    + "or add and commit it first.");
         }
         checkoutCommit(getBranchHead(branchName));
 
@@ -441,22 +441,18 @@ public class Repository {
      */
     public static void merge(String givenBranch) {
         validateMerge(givenBranch);
-
         /* Load the two commits. */
         Commit headCommit = Commit.load(getCurrentHead());
         String givenID = getBranchHead(givenBranch);
         Commit givenCommit = Commit.load(givenID);
-
         /* Find the common ancestor. */
         LinkedList<String> currentHistory = Commit.getHistory(headCommit.getID());
         LinkedList<String> givenHistory = Commit.getHistory(givenCommit.getID());
         validateHistory(givenBranch, currentHistory, givenHistory);
-
         // Determine split point and load that commit.
         String splitID = Commit.findSplit(currentHistory, givenHistory);
         Commit splitCommit = Commit.load(splitID);
 
-        /* Work through the files referenced by each of the three commits. */
         LinkedList<String> conflicts = new LinkedList<>();
         Index index = Index.load();
 
@@ -483,22 +479,18 @@ public class Repository {
                             conflicts.add(filename);
                         }
                     }
-
-                } else { // Not in split commit means modified in both.
+                // Not in split commit means modified in both.
+                } else if (!headBlob.equals(givenBlob)) {
                     // If different, then in conflict.
-                    if (!headBlob.equals(givenBlob))
                         conflicts.add(filename);
-                    // Otherwise, do nothing in order to keep the HEAD version.
-                }
-            } else { // Not in given branch.
-                if (splitCommit.getBlobs().containsKey(filename)) {
+                    } // Otherwise, do nothing in order to keep the HEAD version.
+            } else if (splitCommit.getBlobs().containsKey(filename)) { // Not in given branch.
                     String splitBlob = splitCommit.getBlobs().get(filename);
                     // If unmodified in HEAD since split, then remove.
                     if (headBlob.equals(splitBlob)) {
                         index.remove(filename);
                     }
                 } // Otherwise, unique to HEAD, so do nothing to keep it.
-            }
         }
 
         // Go through files in given branch that are NOT in current branch's HEAD commit.
@@ -518,22 +510,22 @@ public class Repository {
             }
         }
 
-        /* Handle merge conflicts by concatenating the two versions and staging the file
-         * for addition. Whereas the above logic handles already existing blobs, and therefore
-         * stages directly with the index, here a new blob needs to be created, so the
-         * Repository.add() method is used. Then conclude the merge and print out merge
-         * conflict message. */
         if (!conflicts.isEmpty()) {
             mergeConflict(conflicts, givenBranch);
         } else { // No conflicts. Conclude merge and print message.
-            Commit mergeCommit = new Commit(headCommit.getID(), givenID, "Merged" + givenBranch
+            Commit mergeCommit = new Commit(headCommit.getID(), givenID, "Merged " + givenBranch
                                             + " into " + getCurrentBranch() + ".");
             mergeCommit.save();
             updateBranchHead(getCurrentBranch(), mergeCommit.getID());
         }
     }
 
-    /** Helper method to handle a merge commit with conflicts. */
+    /** Helper method to handle a merge commit with conflicts.
+     * Handle merge conflicts by concatenating the two versions and staging the file
+     * for addition. Whereas the above logic handles already existing blobs, and therefore
+     * stages directly with the index, here a new blob needs to be created, so the
+     * Repository.add() method is used. Then conclude the merge and print out merge
+     * conflict message. */
     private static void mergeConflict(LinkedList<String> conflicts, String givenBranch) {
         Commit headCommit = Commit.load(getCurrentHead());
         Commit givenCommit = Commit.load(getBranchHead(givenBranch));
@@ -556,18 +548,19 @@ public class Repository {
             add(filename);
         }
 
-        String mergeMsg = "Merged " +
-                getCurrentBranch() +
-                " into " +
-                givenBranch +
-                ".";
+        String mergeMsg = "Merged "
+                + getCurrentBranch()
+                + " into "
+                + givenBranch
+                + ".";
         Commit mergeCommit = new Commit(headCommit.getID(), getBranchHead(givenBranch), mergeMsg);
         mergeCommit.save();
         updateBranchHead(getCurrentBranch(), mergeCommit.getID());
         System.out.println("Encountered a merge conflict");
     }
 
-    private static void validateHistory(String givenBranch, LinkedList<String> currentHistory, LinkedList<String> givenHistory) {
+    private static void validateHistory(String givenBranch, LinkedList<String> currentHistory,
+                                        LinkedList<String> givenHistory) {
         // Check whether given branch is unmodified ancestor of current branch.
         if (currentHistory.contains(getBranchHead(givenBranch))) {
             Main.exitMessage("Given branch is an ancestor of the current branch.");
@@ -583,8 +576,8 @@ public class Repository {
     private static void validateMerge(String branchName) {
         /* Check for untracked files in the way. */
         if (!untrackedFiles().isEmpty()) {
-            Main.exitMessage("There is an untracked file in the way; delete it, " +
-                    "or add and commit it first.");
+            Main.exitMessage("There is an untracked file in the way; delete it, "
+                    + "or add and commit it first.");
         }
         /* Check whether staging area is clear. */
         Index index = Index.load();
