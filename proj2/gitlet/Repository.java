@@ -247,7 +247,7 @@ public class Repository {
             Main.exitMessage("No need to check out the current branch.");
         }
         // Ensure no untracked files would be overwritten.
-        if (untrackedFiles().isEmpty()) {
+        if (!untrackedFiles().isEmpty()) {
             Main.exitMessage("There is an untracked file in the way; delete it, " +
                     "or add and commit it first.");
         }
@@ -419,7 +419,7 @@ public class Repository {
      */
     public static void reset(String commitID) {
         /* Check for untracked files in the way. */
-        if (untrackedFiles().isEmpty()) {
+        if (!untrackedFiles().isEmpty()) {
             Main.exitMessage("There is an untracked file in the way; delete it, "
                     + "or add and commit it first.");
         }
@@ -582,7 +582,7 @@ public class Repository {
     /** Error checking for merge method. */
     private static void validateMerge(String branchName) {
         /* Check for untracked files in the way. */
-        if (untrackedFiles().isEmpty()) {
+        if (!untrackedFiles().isEmpty()) {
             Main.exitMessage("There is an untracked file in the way; delete it, " +
                     "or add and commit it first.");
         }
@@ -638,20 +638,18 @@ public class Repository {
         // LinkedList to hold untracked files.
         LinkedList<String> files = new LinkedList<>();
 
-        /* First fill it with the names of files in working directory that are
-        not referenced by the current commit. */
+        /* Fill it with the names of files in working directory that are
+        neither referenced by the current commit nor in the staging area. */
         Commit headCommit = Commit.load(getCurrentHead());
+        Index index = Index.load();
         for (String filename : Objects.requireNonNull(plainFilenamesIn(CWD))) {
-            if (!headCommit.getBlobs().containsKey(filename)) {
+            boolean tracked = headCommit.getBlobs().containsKey(filename);
+            boolean stagedForAdd = index.getAdditions().containsKey(filename);
+            boolean stagedForRm = index.getRemovals().contains(filename);
+            if (!tracked && !stagedForAdd && !stagedForRm) {
                 files.add(filename);
             }
         }
-
-        // Then remove names of files from the list that are in the staging area.
-        Index index = Index.load();
-        files.removeIf(filename -> index.getAdditions().containsKey(filename));
-        files.removeIf(filename -> index.getRemovals().contains(filename));
-
         return files;
     }
 
