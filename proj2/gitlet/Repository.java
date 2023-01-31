@@ -73,7 +73,7 @@ public class Repository {
      * If the current working version of the file is identical to the version in
      * the current commit, do not stage it to be added, and remove it from the
      * staging area if it is already there (as can happen when a file is changed,
-     * added, and then changed back to it’s original version). The file will no longer
+     * added, and then changed back to its original version). The file will no longer
      * be staged for removal (see gitlet rm), if it was at the time of the command. */
     public static void add(String filename) {
         File file = Utils.join(CWD, filename);
@@ -88,14 +88,18 @@ public class Repository {
         // Load current commit in order to check for changes.
         Commit commit = Commit.load(getCurrentHead());
         // Check whether file is unchanged since current commit.
-        if (commit.getBlobs().containsKey(blob.getID())) {
-            // Remove from staging area if there.
-            index.getAdditions().remove(filename);
+        if (commit.getBlobs().containsKey(filename)) {
+            if (commit.getBlobs().get(filename).equals(blob.getID())) {
+                // Remove from staging area if unchanged.
+                index.getAdditions().remove(filename);
+            }
+        } else {
+            // Stage file
+            index.stage(filename, blob.getID());
         }
-        // Stage file
-        index.stage(filename, blob.getID());
+        // If staged for removal, remove from removals list.
+        index.getRemovals().remove(filename);
         index.save();
-
         // Save blob
         File blobFile = Utils.join(BLOBS_DIR, blob.getID());
         Utils.writeObject(blobFile, blob);

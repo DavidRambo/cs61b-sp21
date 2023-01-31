@@ -27,7 +27,8 @@ public class Index implements Serializable {
         return removals;
     }
 
-    /** Stages file for addition.
+    /** Stages file for addition. If it was previously staged for removal, then remove from
+     * removals and only stage if modified.
      * @param filename the name of the file to be added
      * */
     public void stage(String filename, String blobID) {
