@@ -248,7 +248,8 @@ public class Repository {
         }
         // Ensure no untracked files would be overwritten.
         if (untrackedFiles().isEmpty()) {
-            Main.exitMessage("There is an untracked file in the way; delete it, or add and commit it first.");
+            Main.exitMessage("There is an untracked file in the way; delete it, " +
+                    "or add and commit it first.");
         }
         checkoutCommit(getBranchHead(branchName));
 
@@ -341,8 +342,9 @@ public class Repository {
 //            Main.exitMessage("A branch with that name does not exist.");
         File file = Utils.join(BRANCHES, branchName);
 
-        if (!file.delete())
+        if (!file.delete()) {
             Main.exitMessage("A branch with that name does not exist.");
+        }
     }
 
     /** Prints out:
@@ -418,8 +420,8 @@ public class Repository {
     public static void reset(String commitID) {
         /* Check for untracked files in the way. */
         if (untrackedFiles().isEmpty()) {
-            Main.exitMessage("There is an untracked file in the way; delete it, " +
-                    "or add and commit it first.");
+            Main.exitMessage("There is an untracked file in the way; delete it, "
+                    + "or add and commit it first.");
         }
         // Try to find a matching ID for abbreviated IDs of fewer than 40 characters
         if (commitID.length() < 40) {
@@ -438,27 +440,7 @@ public class Repository {
      * branch, it stages files for addition or removal before creating a new commit.
      */
     public static void merge(String givenBranch) {
-        /* Check for untracked files in the way. */
-        if (untrackedFiles().isEmpty()) {
-            Main.exitMessage("There is an untracked file in the way; delete it, " +
-                    "or add and commit it first.");
-        }
-        /* Check whether staging area is clear. */
-        Index index = Index.load();
-        if (!index.getAdditions().isEmpty() || !index.getRemovals().isEmpty()) {
-            Main.exitMessage("You have uncommited changes.");
-        }
-
-        /* Check that merge is possible with specified branch. */
-        List<String> branches = Utils.plainFilenamesIn(BRANCHES);
-        assert branches != null;
-        if (!branches.contains(givenBranch)) {
-            Main.exitMessage("No such branch exists.");
-        }
-        // Ensure not already checked out.
-        if (givenBranch.equals(getCurrentBranch())) {
-            Main.exitMessage("Cannot merge a branch with itself.");
-        }
+        validateMerge(givenBranch);
 
         /* Load the two commits. */
         Commit headCommit = Commit.load(getCurrentHead());
@@ -483,8 +465,8 @@ public class Repository {
         Commit splitCommit = Commit.load(splitID);
 
         /* Work through the files referenced by each of the three commits. */
-        // To hold filenames in conflict.
         LinkedList<String> conflicts = new LinkedList<>();
+        Index index = Index.load();
 
         // Go through each file in the current branch's HEAD commit.
         for (String filename : headCommit.getBlobs().keySet()) {
@@ -587,6 +569,32 @@ public class Repository {
             Commit mergeCommit = new Commit(headCommit.getID(), givenID, mergeMessage.toString());
             mergeCommit.save();
             updateBranchHead(getCurrentBranch(), mergeCommit.getID());
+        }
+    }
+
+    /** Error checking for merge method. */
+    private static void validateMerge(String branchName) {
+        /* Check for untracked files in the way. */
+        if (untrackedFiles().isEmpty()) {
+            Main.exitMessage("There is an untracked file in the way; delete it, " +
+                    "or add and commit it first.");
+        }
+        /* Check whether staging area is clear. */
+        Index index = Index.load();
+        if (!index.getAdditions().isEmpty() || !index.getRemovals().isEmpty()) {
+            Main.exitMessage("You have uncommited changes.");
+        }
+
+        // Ensure not already checked out.
+        if (branchName.equals(getCurrentBranch())) {
+            Main.exitMessage("Cannot merge a branch with itself.");
+        }
+
+        /* Check that merge is possible with specified branch. */
+        List<String> branches = Utils.plainFilenamesIn(BRANCHES);
+        assert branches != null;
+        if (!branches.contains(branchName)) {
+            Main.exitMessage("No such branch exists.");
         }
     }
 

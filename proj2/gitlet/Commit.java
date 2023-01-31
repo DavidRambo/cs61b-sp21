@@ -155,7 +155,8 @@ public class Commit implements Serializable {
     }
 
     /** Determines the latest common ancestor of the two specified commit histories. */
-    public static String findSplit(LinkedList<String> currentHistory, LinkedList<String> givenHistory) {
+    public static String findSplit(LinkedList<String> currentHistory,
+                                   LinkedList<String> givenHistory) {
         for (String commitID : givenHistory) {
             if (currentHistory.contains(commitID)) {
                 return commitID;
