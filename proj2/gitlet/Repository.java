@@ -521,6 +521,7 @@ public class Repository {
                      but not present in HEAD, so it remains removed. */
             }
         }
+        index.save();
 
         if (!conflicts.isEmpty()) {
             mergeConflict(conflicts, givenBranch);
