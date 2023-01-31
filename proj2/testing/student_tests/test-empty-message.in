@@ -1,0 +1,9 @@
+# student_testing/test-empty.message.in
+> init
+<<<
++ a.txt ex.txt
+> add a.txt
+<<<
+> commit ""
+Please enter a commit message.
+<<<
