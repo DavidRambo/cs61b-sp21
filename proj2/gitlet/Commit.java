@@ -96,7 +96,7 @@ public class Commit implements Serializable {
         return commit.getBlobs();
     }
 
-    /** Returns blobs HashMap. */
+    /** Returns blobs HashMap< key = filename, value = blobID >. */
     public HashMap<String, String> getBlobs() {
         return this.blobs;
     }
