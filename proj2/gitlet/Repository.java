@@ -450,16 +450,8 @@ public class Repository {
         /* Find the common ancestor. */
         LinkedList<String> currentHistory = Commit.getHistory(headCommit.getID());
         LinkedList<String> givenHistory = Commit.getHistory(givenCommit.getID());
-        // Check whether given branch is ancestor already of current branch.
-        if (currentHistory.contains(givenCommit.getID())) {
-            Main.exitMessage("Given branch is an ancestor of the current branch.");
-        }
-        // Check whether current branch can be fast-forwarded.
-        if (givenHistory.contains(headCommit.getID())) {
-            checkoutBranch(givenBranch);
-            System.out.println("Current branch is fast-forwarded.");
-            return;
-        }
+        validateHistory(givenBranch, currentHistory, givenHistory);
+
         // Determine split point and load that commit.
         String splitID = Commit.findSplit(currentHistory, givenHistory);
         Commit splitCommit = Commit.load(splitID);
@@ -532,43 +524,58 @@ public class Repository {
          * Repository.add() method is used. Then conclude the merge and print out merge
          * conflict message. */
         if (!conflicts.isEmpty()) {
-            for (String filename : conflicts) {
-                StringBuilder conflictFile = new StringBuilder();
-                conflictFile.append("<<<<<<< HEAD\n");
-                // Load the current HEAD blob.
-                File headBlobFile = Utils.join(BLOBS_DIR, headCommit.getBlobs().get(filename));
-                Blob headBlob = Utils.readObject(headBlobFile, Blob.class);
-                conflictFile.append(headBlob.getContents());
-                conflictFile.append("=======\n");
-                // Load the given blob.
-                File givenBlobFile = Utils.join(BLOBS_DIR, givenCommit.getBlobs().get(filename));
-                Blob givenBlob = Utils.readObject(givenBlobFile, Blob.class);
-                conflictFile.append(givenBlob.getContents());
-                conflictFile.append(">>>>>>>");
-                File file = Utils.join(CWD, filename);
-                Utils.writeContents(file, conflictFile.toString());
-                add(filename);
-            }
-            StringBuilder mergeMessage = new StringBuilder();
-            mergeMessage.append("Merged ");
-            mergeMessage.append(getCurrentBranch());
-            mergeMessage.append(" into ");
-            mergeMessage.append(givenBranch);
-            mergeMessage.append(".");
-            Commit mergeCommit = new Commit(headCommit.getID(), givenID, mergeMessage.toString());
-            mergeCommit.save();
-            updateBranchHead(getCurrentBranch(), mergeCommit.getID());
-            System.out.println("Encountered a merge conflict");
+            mergeConflict(conflicts, givenBranch);
         } else { // No conflicts. Conclude merge and print message.
-            StringBuilder mergeMessage = new StringBuilder();
-            mergeMessage.append("Merged ");
-            mergeMessage.append(getCurrentBranch());
-            mergeMessage.append(" merged into ");
-            mergeMessage.append(givenBranch);
-            mergeMessage.append(".");
-            Commit mergeCommit = new Commit(headCommit.getID(), givenID, mergeMessage.toString());
+            Commit mergeCommit = new Commit(headCommit.getID(), givenID, "Merged" + givenBranch
+                                            + " into " + getCurrentBranch() + ".");
             mergeCommit.save();
             updateBranchHead(getCurrentBranch(), mergeCommit.getID());
+        }
+    }
+
+    /** Helper method to handle a merge commit with conflicts. */
+    private static void mergeConflict(LinkedList<String> conflicts, String givenBranch) {
+        Commit headCommit = Commit.load(getCurrentHead());
+        Commit givenCommit = Commit.load(getBranchHead(givenBranch));
+
+        for (String filename : conflicts) {
+            StringBuilder conflictFile = new StringBuilder();
+            conflictFile.append("<<<<<<< HEAD\n");
+            // Load the current HEAD blob.
+            File headBlobFile = Utils.join(BLOBS_DIR, headCommit.getBlobs().get(filename));
+            Blob headBlob = Utils.readObject(headBlobFile, Blob.class);
+            conflictFile.append(headBlob.getContents());
+            conflictFile.append("=======\n");
+            // Load the given blob.
+            File givenBlobFile = Utils.join(BLOBS_DIR, givenCommit.getBlobs().get(filename));
+            Blob givenBlob = Utils.readObject(givenBlobFile, Blob.class);
+            conflictFile.append(givenBlob.getContents());
+            conflictFile.append(">>>>>>>");
+            File file = Utils.join(CWD, filename);
+            Utils.writeContents(file, conflictFile.toString());
+            add(filename);
+        }
+
+        String mergeMsg = "Merged " +
+                getCurrentBranch() +
+                " into " +
+                givenBranch +
+                ".";
+        Commit mergeCommit = new Commit(headCommit.getID(), getBranchHead(givenBranch), mergeMsg);
+        mergeCommit.save();
+        updateBranchHead(getCurrentBranch(), mergeCommit.getID());
+        System.out.println("Encountered a merge conflict");
+    }
+
+    private static void validateHistory(String givenBranch, LinkedList<String> currentHistory, LinkedList<String> givenHistory) {
+        // Check whether given branch is unmodified ancestor of current branch.
+        if (currentHistory.contains(getBranchHead(givenBranch))) {
+            Main.exitMessage("Given branch is an ancestor of the current branch.");
+        }
+        // Check whether current branch can be fast-forwarded.
+        if (givenHistory.contains(getCurrentHead())) {
+            checkoutBranch(givenBranch);
+            Main.exitMessage("Current branch is fast-forwarded.");
         }
     }
 
