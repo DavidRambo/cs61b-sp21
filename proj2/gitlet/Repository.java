@@ -92,11 +92,13 @@ public class Repository {
             if (commit.getBlobs().get(filename).equals(blob.getID())) {
                 // Remove from staging area if unchanged.
                 index.getAdditions().remove(filename);
+                // If staged for removal, remove from removals list.
+                index.getRemovals().remove(filename);
                 index.save();
                 return;
             }
         }
-        
+
         // Stage file
         index.stage(filename, blob.getID());
 
