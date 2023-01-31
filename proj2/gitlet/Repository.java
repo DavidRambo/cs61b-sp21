@@ -483,15 +483,15 @@ public class Repository {
                 // Not in split commit means modified in both.
                 } else if (!headBlob.equals(givenBlob)) {
                     // If different, then in conflict.
-                        conflicts.add(filename);
-                    } // Otherwise, do nothing in order to keep the HEAD version.
+                    conflicts.add(filename);
+                } // Otherwise, do nothing in order to keep the HEAD version.
             } else if (splitCommit.getBlobs().containsKey(filename)) { // Not in given branch.
-                    String splitBlob = splitCommit.getBlobs().get(filename);
-                    // If unmodified in HEAD since split, then remove.
-                    if (headBlob.equals(splitBlob)) {
-                        index.remove(filename);
-                    }
-                } // Otherwise, unique to HEAD, so do nothing to keep it.
+                String splitBlob = splitCommit.getBlobs().get(filename);
+                // If unmodified in HEAD since split, then remove.
+                if (headBlob.equals(splitBlob)) {
+                    index.remove(filename);
+                }
+            } // Otherwise, unique to HEAD, so do nothing to keep it.
         }
 
         // Go through files in given branch that are NOT in current branch's HEAD commit.
