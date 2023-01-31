@@ -22,7 +22,6 @@ No changes added to the commit.
 <<<
 > commit "Add f.txt"
 <<<
-- f.txt
 > rm f.txt
 <<<
 > status
@@ -37,5 +36,23 @@ f.txt
 === Modifications Not Staged For Commit ===
 
 === Untracked Files ===
+notwug.txt
+
+<<<
++ f.txt wug.txt
+> add f.txt
+<<<
+> status
+=== Branches ===
+*master
+
+=== Staged Files ===
+
+=== Removed Files ===
+ 
+=== Modifications Not Staged For Commit ===
+
+=== Untracked Files ===
+notwug.txt
 
 <<<
