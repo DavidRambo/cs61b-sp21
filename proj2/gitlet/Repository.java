@@ -607,7 +607,7 @@ public class Repository {
         List<String> branches = Utils.plainFilenamesIn(BRANCHES);
         assert branches != null;
         if (!branches.contains(branchName)) {
-            Main.exitMessage("No such branch exists.");
+            Main.exitMessage("A branch with that name does not exist.");
         }
     }
 
