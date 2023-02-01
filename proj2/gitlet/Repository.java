@@ -472,11 +472,9 @@ public class Repository {
         for (String filename : headCommit.getBlobs().keySet()) {
             // Load the blob ID for the file
             String headBlob = headCommit.getBlobs().get(filename);
-
             // Check for file in given branch and load blobID of its version
             if (givenCommit.getBlobs().containsKey(filename)) {
                 String givenBlob = givenCommit.getBlobs().get(filename);
-
                 // Check for file at split point
                 if (splitCommit.getBlobs().containsKey(filename)) {
                     String splitBlob = splitCommit.getBlobs().get(filename);
@@ -504,11 +502,9 @@ public class Repository {
                 }
             } // Otherwise, unique to HEAD, so do nothing to keep it.
         }
-
         // Go through files in given branch that are NOT in current branch's HEAD commit.
         for (String filename : givenCommit.getBlobs().keySet()) {
             String givenBlobID = givenCommit.getBlobs().get(filename);
-
             if (!headCommit.getBlobs().containsKey(filename)) {
                 // Not in split (nor in HEAD), then stage given branch's version.
                 if (!splitCommit.getBlobs().containsKey(filename)) {
@@ -522,7 +518,6 @@ public class Repository {
             }
         }
         index.save();
-
         if (!conflicts.isEmpty()) {
             mergeConflict(conflicts, givenBranch);
         } else { // No conflicts. Conclude merge and print message.
