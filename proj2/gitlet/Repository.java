@@ -555,10 +555,10 @@ public class Repository {
             File givenBlobFile = Utils.join(BLOBS_DIR, givenCommit.getBlobs().get(filename));
             Blob givenBlob = Utils.readObject(givenBlobFile, Blob.class);
             conflictFile.append(givenBlob.getContents());
-            conflictFile.append(">>>>>>>");
+            conflictFile.append(">>>>>>>\n");
             File file = Utils.join(CWD, filename);
             Utils.writeContents(file, conflictFile.toString());
-            add(filename);
+            add(filename); // Stage merge-conflicted file for commit.
         }
 
         String mergeMsg = "Merged "
