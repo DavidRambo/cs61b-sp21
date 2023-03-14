@@ -33,6 +33,10 @@ public class Index implements Serializable {
      * */
     public void stage(String filename, String blobID) {
         additions.put(filename, blobID);
+
+        if (getRemovals().contains(filename)) {
+            getRemovals().remove(filename);
+        }
     }
 
     /** If file is currently staged, then it unstages file for addition.

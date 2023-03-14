@@ -663,13 +663,14 @@ public class Repository {
      * - staged for addition, but deleted in the working directory;
      * - not staged for removal, but tracked in the current commit and deleted from the
      *   working directory.
+     *
+     *   TODO: Does not catch untracked files staged for addition and further modified.
      * */
     public static LinkedList<String> modifiedFiles() {
         LinkedList<String> files = new LinkedList<>();
 
         Commit headCommit = Commit.load(getCurrentHead());
         Index index = Index.load();
-        List<String> allWorkingFiles = Utils.plainFilenamesIn(CWD);
 
         /* Check tracked files. */
         for (String filename : headCommit.getBlobs().keySet()) {
